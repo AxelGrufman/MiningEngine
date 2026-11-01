@@ -4,7 +4,50 @@
 #include <fstream>
 #include <string>
 #include <filesystem>
+#include <numbers>
 
+struct DrawSettings
+{
+	float x = 0.0f;
+	float y = 0.0f;
+
+	float scaleX = 1.0f;
+	float scaleY = 1.0f;
+
+	float rotation = 0.0f;
+
+	float red = 1.0f;
+	float green = 1.0f;
+	float blue = 1.0f;
+};
+
+void drawTriangle(
+	GLint offsetLocation,
+	GLint scaleLocation,
+	GLint rotationLocation,
+	GLint colorLocation,
+	const DrawSettings& settings)
+{
+	glUniform2f(offsetLocation, settings.x, settings.y);
+	glUniform2f(scaleLocation, settings.scaleX, settings.scaleY);
+	glUniform1f(rotationLocation, settings.rotation);
+	glUniform3f(colorLocation, settings.red, settings.green, settings.blue);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void drawRectangle(
+	GLint offsetLocation,
+	GLint scaleLocation,
+	GLint rotationLocation,
+	GLint colorLocation,
+	const DrawSettings& settings)
+{
+	drawTriangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, settings);
+	DrawSettings secondHalf = settings;
+
+	secondHalf.rotation += std::numbers::pi_v<float>;
+	drawTriangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, secondHalf);
+}
 
 int main()
 {
@@ -38,7 +81,7 @@ int main()
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
 		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-		 0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f
 	};
 
 	unsigned int VBO;
@@ -136,6 +179,12 @@ int main()
 		<< infoLog << '\n';
 	}
 	
+	GLint vertexStatus = GL_FALSE;
+	GLint fragmentStatus = GL_FALSE;
+
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertexStatus);
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragmentStatus);
+	
 	GLuint shaderProgram = glCreateProgram();
 
 	glAttachShader(shaderProgram, vertexShader);
@@ -156,8 +205,33 @@ int main()
 		std::cerr << infoLog << '\n';
 	}
 	
+	GLint offsetLocation = glGetUniformLocation(shaderProgram, "uOffset");
+	GLint scaleLocation = glGetUniformLocation(shaderProgram, "uScale");
+	GLint rotationLocation = glGetUniformLocation(shaderProgram, "uRotation");
+	GLint colorLocation = glGetUniformLocation(shaderProgram, "uColor");
+	
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+	
+	DrawSettings firstTriangle;
+
+	firstTriangle.x = -0.4f;
+	firstTriangle.scaleX = 0.4f;
+	firstTriangle.scaleY = 0.8f;
+
+	firstTriangle.red = 1.0f;
+	firstTriangle.green = 0.0f;
+	firstTriangle.blue = 0.0f;
+	
+	DrawSettings SecondTriangel;
+
+	SecondTriangel.x = 0.4f;
+	SecondTriangel.scaleX = 0.7f;
+	SecondTriangel.scaleY = 0.4f;
+
+	SecondTriangel.red = 0.0f;
+	SecondTriangel.green = 0.0f;
+	SecondTriangel.blue = 1.0f;
 	
 	while (!glfwWindowShouldClose(window))
 	{
@@ -166,9 +240,9 @@ int main()
 		
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-
-		glDrawArrays(GL_TRIANGLES, 0, 3);
 		
+		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, firstTriangle);
+			
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
