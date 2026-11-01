@@ -5,6 +5,7 @@
 #include <string>
 #include <filesystem>
 #include <numbers>
+#include <random>
 
 struct DrawSettings
 {
@@ -213,35 +214,81 @@ int main()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 	
-	DrawSettings firstTriangle;
-
-	firstTriangle.x = -0.4f;
-	firstTriangle.scaleX = 0.4f;
-	firstTriangle.scaleY = 0.8f;
-
-	firstTriangle.red = 1.0f;
-	firstTriangle.green = 0.0f;
-	firstTriangle.blue = 0.0f;
+	DrawSettings Housebody;
+	Housebody.x = 0.0f;
+	Housebody.y = -0.1f;
+	Housebody.scaleX = 1.0f;
+	Housebody.scaleY = 0.7f;
+	Housebody.red = 0.0f;
+	Housebody.green = 0.0f;
+	Housebody.blue = 0.0f;
 	
-	DrawSettings SecondTriangel;
-
-	SecondTriangel.x = 0.4f;
-	SecondTriangel.scaleX = 0.7f;
-	SecondTriangel.scaleY = 0.4f;
-
-	SecondTriangel.red = 0.0f;
-	SecondTriangel.green = 0.0f;
-	SecondTriangel.blue = 1.0f;
+	DrawSettings Roof;
+	Roof.x = 0.0f;
+	Roof.y = 0.45f;
+	Roof.scaleX = 1.3f;
+	Roof.scaleY = 0.4f;
+	Roof.red = 1.0f;
+	Roof.green = 0.0f;
+	Roof.blue = 0.0f;
+	
+	DrawSettings Door;
+	Door.x = 0.0f;
+	Door.y = -0.32f;
+	Door.scaleX = 0.15f;
+	Door.scaleY = 0.25f;
+	Door.red = 0.0f;
+	Door.green = 1.0f;
+	Door.blue = 0.0f;
+	
+	DrawSettings Window1;
+	Window1.x = -0.3f;
+	Window1.y =	 0.0f;
+	Window1.scaleX = 0.2f;
+	Window1.scaleY = 0.2f;
+	Window1.red = 0.0f;
+	Window1.green = 0.0f;
+	Window1.blue = 1.0f;
+	
+	DrawSettings Window2;
+	Window2.x = 0.3f;
+	Window2.y =	 0.0f;
+	Window2.scaleX = 0.2f;
+	Window2.scaleY = 0.2f;
+	Window2.red = 0.0f;
+	Window2.green = 0.0f;
+	Window2.blue = 1.0f;
+	
+	std::random_device rd;
+	std::mt19937 randomGenerator(rd());
+	std::uniform_real_distribution<float> randomColor(0.0f, 1.0f);
+	
+	bool wasSpacePressed = false;
 	
 	while (!glfwWindowShouldClose(window))
 	{
+		bool isSpacePressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+
+		if (isSpacePressed && !wasSpacePressed)
+		{
+			Roof.red = randomColor(randomGenerator);
+			Roof.green = randomColor(randomGenerator);
+			Roof.blue = randomColor(randomGenerator);
+		}
+
+		wasSpacePressed = isSpacePressed;
+		
 		glClearColor(0.4f, 0.3f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
 		
-		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, firstTriangle);
+		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Housebody);
+		drawTriangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Roof);
+		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Door);
+		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Window1);
+		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Window2);
 			
 		glfwSwapBuffers(window);
 		glfwPollEvents();
