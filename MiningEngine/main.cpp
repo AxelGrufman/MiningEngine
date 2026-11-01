@@ -22,170 +22,94 @@ struct DrawSettings
 	float blue = 1.0f;
 };
 
-void drawTriangle(
-	GLint offsetLocation,
-	GLint scaleLocation,
-	GLint rotationLocation,
-	GLint colorLocation,
-	const DrawSettings& settings)
+struct Mesh
 {
-	glUniform2f(offsetLocation, settings.x, settings.y);
-	glUniform2f(scaleLocation, settings.scaleX, settings.scaleY);
-	glUniform1f(rotationLocation, settings.rotation);
-	glUniform3f(colorLocation, settings.red, settings.green, settings.blue);
+	GLuint VAO = 0;
+	GLuint VBO = 0;
+};
+
+struct ShaderUniforms
+{
+	GLint offset = -1;
+	GLint scale = -1;
+	GLint rotation = -1;
+	GLint color = -1;
+};
+
+struct EngineResources
+{
+	Mesh triangle;
+
+	GLuint vertexShader = 0;
+	GLuint fragmentShader = 0;
+	GLuint shaderProgram = 0;
+};
+
+void drawTriangle(const ShaderUniforms& uniforms, const DrawSettings& settings)
+{
+	glUniform2f(uniforms.offset, settings.x, settings.y);
+	glUniform2f(uniforms.scale, settings.scaleX, settings.scaleY);
+	glUniform1f(uniforms.rotation, settings.rotation);
+	glUniform3f(uniforms.color, settings.red, settings.green, settings.blue);
+
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void drawRectangle(
-	GLint offsetLocation,
-	GLint scaleLocation,
-	GLint rotationLocation,
-	GLint colorLocation,
-	const DrawSettings& settings)
+void drawRectangle(const ShaderUniforms& uniform, const DrawSettings& settings)
 {
-	drawTriangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, settings);
+	drawTriangle(uniform, settings);
 	DrawSettings secondHalf = settings;
 
 	secondHalf.rotation += std::numbers::pi_v<float>;
-	drawTriangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, secondHalf);
+	drawTriangle(uniform, secondHalf);
 }
 
-int main()
+bool loadShaderSource(const std::string& path, std::string& output)
 {
-	if (!glfwInit())
+	std::ifstream file(path);
+
+	if (!file.is_open())
 	{
-		std::cerr << "Failed to initialize GLFW!" << std::endl;
-		return -1;
+		std::cerr << "Failed to open shader: " << path << '\n';
+		return false;
 	}
-	
-	GLFWwindow* window;
-	window = glfwCreateWindow(800, 600, "MiningEngine", nullptr, nullptr);
-	
-	if (!window)
-	{
-		std::cerr << "Failed to create GLFW window!" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-	
-	glfwMakeContextCurrent(window);
-	
-	if (!gladLoadGL(glfwGetProcAddress))
-	{
-		std::cerr << "Failed to initialize GLAD!\n";
-		glfwDestroyWindow(window);
-		glfwTerminate();
-		return -1;
-	}
-	
-	
-	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f
-	};
 
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);
+	output.clear();
 
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW
-	);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	
-	std::ifstream shaderFile("assets/shaders/basic.vert");
-
-	if (!shaderFile.is_open())
-	{
-		std::cerr << "Failed to open vertex shader!\n";
-	}
-	
-	std::string shaderSource;
 	std::string line;
 
-	while (std::getline(shaderFile, line))
+	while (std::getline(file, line))
 	{
-		shaderSource += line;
-		shaderSource += '\n';
+		output += line;
+		output += '\n';
 	}
-		
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	
+
+	return true;
+}
+
+GLuint compileShader(GLenum shaderType, const std::string& shaderSource)
+{
+	GLuint shader = glCreateShader(shaderType);
 	const char* source = shaderSource.c_str();
-
-	glShaderSource(vertexShader, 1, &source, nullptr);
-	
-	glCompileShader(vertexShader);
-	
+	glShaderSource(shader, 1, &source, nullptr);
+	glCompileShader(shader);
 	GLint compileStatus = GL_FALSE;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
 
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compileStatus);
-	
 	if (compileStatus == GL_FALSE)
 	{
-		std::cerr << "Vertex shader compilation failed!\n";
+		std::cerr << "Shader compilation failed!\n";
 		GLchar infoLog[512] = {};
-
-		glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-
-		std::cerr << "Shader compilation error:\n"
-				  << infoLog << '\n';
+		glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+		std::cerr << infoLog << '\n';
+		glDeleteShader(shader);
+		return 0;
 	}
-	
-	
-	//fragment shader
-	
-	std::ifstream FragmentFile("assets/shaders/basic.frag");
+	return shader;
+}
 
-	if (!FragmentFile.is_open())
-	{
-		std::cerr << "Failed to open fragment shader!\n";
-	}
-	
-	std::string fragmentSource;
-
-	while (std::getline(FragmentFile, line))
-	{
-		fragmentSource += line;
-		fragmentSource += '\n';
-	}
-	
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-	const char* fragmentSourcePtr = fragmentSource.c_str();
-
-	glShaderSource(fragmentShader, 1, &fragmentSourcePtr, nullptr);
-
-	glCompileShader(fragmentShader);
-	
-	
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compileStatus);
-	
-	if (compileStatus == GL_FALSE)
-	{
-		std::cerr << "Fragment shader compilation failed!\n";
-		GLchar infoLog[512] = {};
-		glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-		std::cerr << "Shader compilation error:\n"
-		<< infoLog << '\n';
-	}
-	
-	GLint vertexStatus = GL_FALSE;
-	GLint fragmentStatus = GL_FALSE;
-
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertexStatus);
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragmentStatus);
-	
+GLuint createShaderProgram(GLuint vertexShader, GLuint fragmentShader)
+{
 	GLuint shaderProgram = glCreateProgram();
 
 	glAttachShader(shaderProgram, vertexShader);
@@ -200,19 +124,151 @@ int main()
 	{
 		std::cerr << "Program linking failed!\n";
 		GLchar infoLog[512] = {};
-
 		glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-
 		std::cerr << infoLog << '\n';
+		glDeleteProgram(shaderProgram);
+		return 0;
+	}
+	return shaderProgram;
+}
+
+Mesh createTriangleMesh()
+{
+	Mesh mesh;
+	
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f
+	};
+
+	
+	glGenBuffers(1, &mesh.VBO);
+
+	
+	glGenVertexArrays(1, &mesh.VAO);
+
+	glBindVertexArray(mesh.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh.VBO);
+
+	glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	return mesh;
+}
+
+void cleanup(GLFWwindow* window, EngineResources& resources)
+{
+	if (resources.vertexShader != 0)
+		glDeleteShader(resources.vertexShader);
+
+	if (resources.fragmentShader != 0)
+		glDeleteShader(resources.fragmentShader);
+
+	if (resources.shaderProgram != 0)
+		glDeleteProgram(resources.shaderProgram);
+
+	if (resources.triangle.VBO != 0)
+		glDeleteBuffers(1, &resources.triangle.VBO);
+
+	if (resources.triangle.VAO != 0)
+		glDeleteVertexArrays(1, &resources.triangle.VAO);
+
+	if (window != nullptr)
+		glfwDestroyWindow(window);
+
+	glfwTerminate();
+
+	resources = {};
+}
+
+GLFWwindow* createWindow(int width, int height, const char* title)
+{
+	if (!glfwInit())
+	{
+		std::cerr << "Failed to initialize GLFW!" << std::endl;
+		return nullptr;
+	}	
+	GLFWwindow* window;
+	window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+	
+	if (!window)
+	{
+		std::cerr << "Failed to create GLFW window!" << std::endl;
+		glfwTerminate();
+		return nullptr;
 	}
 	
-	GLint offsetLocation = glGetUniformLocation(shaderProgram, "uOffset");
-	GLint scaleLocation = glGetUniformLocation(shaderProgram, "uScale");
-	GLint rotationLocation = glGetUniformLocation(shaderProgram, "uRotation");
-	GLint colorLocation = glGetUniformLocation(shaderProgram, "uColor");
+	glfwMakeContextCurrent(window);
 	
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	if (!gladLoadGL(glfwGetProcAddress))
+	{
+		std::cerr << "Failed to initialize GLAD!\n";
+		glfwDestroyWindow(window);
+		glfwTerminate();
+		return nullptr;
+	}
+	return window;
+}
+
+
+int main()
+{
+	GLFWwindow* window = createWindow(800, 600, "MiningEngine");
+		
+	if (!window)
+		return -1;
+	
+	EngineResources resources;
+	resources.triangle = createTriangleMesh();
+	
+	std::string vertexSource;
+	std::string fragmentSource;
+
+	bool vertexLoaded = loadShaderSource("assets/shaders/basic.vert",vertexSource);
+	bool fragmentLoaded = loadShaderSource("assets/shaders/basic.frag",fragmentSource);
+	
+	if (!vertexLoaded || !fragmentLoaded)
+	{
+		cleanup(window, resources);
+		return -1;
+	}
+		
+	resources.vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
+	resources.fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
+	
+	if (resources.vertexShader == 0 || resources.fragmentShader == 0)
+	{
+		cleanup(window, resources);
+		return -1;
+	}
+		
+	resources.shaderProgram = createShaderProgram(resources.vertexShader, resources.fragmentShader);
+	
+	if (resources.shaderProgram == 0)
+	{
+		cleanup(window, resources);
+		return -1;
+	}
+			
+	ShaderUniforms uniforms;
+
+	uniforms.offset = glGetUniformLocation(resources.shaderProgram, "uOffset");
+	uniforms.scale = glGetUniformLocation(resources.shaderProgram, "uScale");
+	uniforms.rotation = glGetUniformLocation(resources.shaderProgram, "uRotation");
+	uniforms.color = glGetUniformLocation(resources.shaderProgram, "uColor");
+	
+	glDeleteShader(resources.vertexShader);
+	glDeleteShader(resources.fragmentShader);
+	resources.vertexShader = 0;
+	resources.fragmentShader = 0;
+	
+	
 	
 	DrawSettings Housebody;
 	Housebody.x = 0.0f;
@@ -281,25 +337,26 @@ int main()
 		glClearColor(0.4f, 0.3f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO);
+		glUseProgram(resources.shaderProgram);
+		glBindVertexArray(resources.triangle.VAO);
 		
-		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Housebody);
-		drawTriangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Roof);
-		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Door);
-		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Window1);
-		drawRectangle(offsetLocation, scaleLocation, rotationLocation, colorLocation, Window2);
+		drawRectangle(uniforms, Housebody);
+		drawTriangle(uniforms, Roof);
+		drawRectangle(uniforms, Door);
+		drawRectangle(uniforms, Window1);
+		drawRectangle(uniforms, Window2);
+		
+		GLenum error;
+
+		while ((error = glGetError()) != GL_NO_ERROR)
+		{
+			std::cerr << "OpenGL error: " << error << '\n';
+		}
 			
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 	
-	glDeleteBuffers(1, &VBO);
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteProgram(shaderProgram);
-
-	glfwDestroyWindow(window);
-	glfwTerminate();
-
+	cleanup(window, resources);
 	return 0;
 }

@@ -24,5 +24,4 @@ add_files("MiningEngine/main.cpp")
 add_packages("glfw", "glad")
 add_links("opengl32")
 
--- Run from the project root so assets can be found
 set_rundir("$(projectdir)")
