@@ -5,6 +5,7 @@ set_languages("c++20")
 
 add_rules("mode.debug", "mode.release")
 
+-- Dependencies
 add_requires("glfw 3.4")
 
 add_requires("glad 2.0.8", {
@@ -14,10 +15,14 @@ add_requires("glad 2.0.8", {
     }
 })
 
+-- Engine
 target("MiningEngine")
-    set_kind("binary")
+set_kind("binary")
 
-    add_files("MiningEngine/main.cpp")
+add_files("MiningEngine/main.cpp")
 
-    add_packages("glfw", "glad")
-    add_links("opengl32")
+add_packages("glfw", "glad")
+add_links("opengl32")
+
+-- Run from the project root so assets can be found
+set_rundir("$(projectdir)")
