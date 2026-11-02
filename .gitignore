@@ -361,3 +361,28 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+
+# ============================================================
+# MiningEngine - Project-specific ignores
+# ============================================================
+
+# xmake local configuration and generated files
+/.xmake/
+/build/
+
+# xmake-generated Visual Studio / Rider solutions
+# These must be regenerated on each computer
+/vsxmake*/
+
+# JetBrains Rider local project settings
+/.idea/
+*.iml
+
+# Other generated IDE/build metadata
+/compile_commands.json
+/cmake-build-*/
+
+# Temporary editor files
+*.swp
+*.swo
