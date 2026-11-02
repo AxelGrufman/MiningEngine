@@ -45,7 +45,7 @@ struct EngineResources
 	GLuint shaderProgram = 0;
 };
 
-void drawTriangle(const ShaderUniforms& uniforms, const DrawSettings& settings)
+void  drawTriangle(const ShaderUniforms& uniforms, const DrawSettings& settings)
 {
 	glUniform2f(uniforms.offset, settings.x, settings.y);
 	glUniform2f(uniforms.scale, settings.scaleX, settings.scaleY);
@@ -55,7 +55,7 @@ void drawTriangle(const ShaderUniforms& uniforms, const DrawSettings& settings)
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-void drawRectangle(const ShaderUniforms& uniform, const DrawSettings& settings)
+void  drawRectangle(const ShaderUniforms& uniform, const DrawSettings& settings)
 {
 	drawTriangle(uniform, settings);
 	DrawSettings secondHalf = settings;
@@ -216,14 +216,50 @@ GLFWwindow* createWindow(int width, int height, const char* title)
 	return window;
 }
 
+void ChangeRoofColour(GLFWwindow* window, bool& wasSpacePressed, DrawSettings& roofSettings, std::mt19937& randomGenerator)
+{
+	std::uniform_real_distribution<float> randomColor(0.0f, 1.0f);
+
+	bool isSpacePressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+
+	if (isSpacePressed && !wasSpacePressed)
+	{
+		roofSettings.red = randomColor(randomGenerator);
+		roofSettings.green = randomColor(randomGenerator);
+		roofSettings.blue = randomColor(randomGenerator);
+	}
+
+	wasSpacePressed = isSpacePressed;
+}
+
+
+void RemoveShaders(EngineResources& resources)
+{
+	glDetachShader(resources.shaderProgram, resources.vertexShader);
+	glDetachShader(resources.shaderProgram, resources.fragmentShader);
+	glDeleteShader(resources.vertexShader);
+	glDeleteShader(resources.fragmentShader);
+	resources.vertexShader = 0;
+	resources.fragmentShader = 0;
+}
+
+ShaderUniforms get_uniforms(EngineResources resources)
+{
+	ShaderUniforms uniforms;
+
+	uniforms.offset = glGetUniformLocation(resources.shaderProgram, "uOffset");
+	uniforms.scale = glGetUniformLocation(resources.shaderProgram, "uScale");
+	uniforms.rotation = glGetUniformLocation(resources.shaderProgram, "uRotation");
+	uniforms.color = glGetUniformLocation(resources.shaderProgram, "uColor");
+	return uniforms;
+}
 
 int main()
 {
 	GLFWwindow* window = createWindow(800, 600, "MiningEngine");
-		
 	if (!window)
 		return -1;
-	
+
 	EngineResources resources;
 	resources.triangle = createTriangleMesh();
 	
@@ -255,20 +291,10 @@ int main()
 		cleanup(window, resources);
 		return -1;
 	}
-			
-	ShaderUniforms uniforms;
-
-	uniforms.offset = glGetUniformLocation(resources.shaderProgram, "uOffset");
-	uniforms.scale = glGetUniformLocation(resources.shaderProgram, "uScale");
-	uniforms.rotation = glGetUniformLocation(resources.shaderProgram, "uRotation");
-	uniforms.color = glGetUniformLocation(resources.shaderProgram, "uColor");
 	
-	glDeleteShader(resources.vertexShader);
-	glDeleteShader(resources.fragmentShader);
-	resources.vertexShader = 0;
-	resources.fragmentShader = 0;
+	RemoveShaders(resources);
 	
-	
+	ShaderUniforms uniforms = get_uniforms(resources);
 	
 	DrawSettings Housebody;
 	Housebody.x = 0.0f;
@@ -316,23 +342,12 @@ int main()
 	Window2.blue = 1.0f;
 	
 	std::random_device rd;
-	std::mt19937 randomGenerator(rd());
-	std::uniform_real_distribution<float> randomColor(0.0f, 1.0f);
-	
+	std::mt19937 randomGenerator(rd());	
 	bool wasSpacePressed = false;
 	
 	while (!glfwWindowShouldClose(window))
 	{
-		bool isSpacePressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-
-		if (isSpacePressed && !wasSpacePressed)
-		{
-			Roof.red = randomColor(randomGenerator);
-			Roof.green = randomColor(randomGenerator);
-			Roof.blue = randomColor(randomGenerator);
-		}
-
-		wasSpacePressed = isSpacePressed;
+		ChangeRoofColour(window, wasSpacePressed, Roof,randomGenerator);
 		
 		glClearColor(0.4f, 0.3f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
