@@ -17,7 +17,7 @@ public:
     void setProjectionMode(ProjectionMode mode);
 
 private:
-    glm::vec3 position = { 2.0f, 1.5f, 3.0f };
+    glm::vec3 position = { 0.0f, 0.0f, 10.0f };
     glm::vec3 target = { 0.0f, 0.0f, 0.0f };
     glm::vec3 up = { 0.0f, 1.0f, 0.0f };
 
@@ -28,5 +28,5 @@ private:
     float farPlane = 100.0f;
 
 	float fieldOfView = 45.0f;
-	float orthographicSize = 2.0f;
+	float orthographicSize = 3.5f;
 };
