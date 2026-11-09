@@ -103,17 +103,6 @@ int main()
 	EngineResources resources;
 	Shader shader;
 	Camera camera;
-	
-	/*glm::mat4 testView = camera.getViewMatrix();
-
-	glm::vec4 nearPoint =
-		testView * glm::vec4(2.0f, 1.3f, 5.0f, 1.0f);
-
-	glm::vec4 farPoint =
-		testView * glm::vec4(2.0f, 1.3f, -5.0f, 1.0f);
-
-	std::cout << "Near Y: " << nearPoint.y << '\n';
-	std::cout << "Far Y: " << farPoint.y << '\n';*/
 
 	if (!resources.triangle.createTriangle())
 	{
@@ -160,23 +149,20 @@ int main()
 			camera.setProjectionMode(Camera::ProjectionMode::Orthographic);
 		}
 		
-		
 		glClearColor(0.4f, 0.3f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		shader.use();
 		
-		
 		glm::mat4 view = camera.getViewMatrix();
 		glm::mat4 projection = camera.getProjectionMatrix();
 		
-		float time = static_cast<float>(glfwGetTime());
-				
-		//glUniformMatrix4fv( shader.getUniformLocation("uModel"),1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(shader.getUniformLocation("uView"),1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(shader.getUniformLocation("uProjection"),1, GL_FALSE, glm::value_ptr(projection));
 		GLint modelLocation = shader.getUniformLocation("uModel");
-		glUniform3f(uniforms.color, 1.0f, 0.7f, 0.2f);
+		glUniform3f(uniforms.color, 0.3f, 0.4f, 0.9f);
+		
+		float time = static_cast<float>(glfwGetTime());
 		
 		glm::mat4 cube1(1.0f);
 		cube1 = glm::translate(cube1, glm::vec3(-2.0f, 1.3f, 0.0f));
@@ -195,15 +181,13 @@ int main()
 		
 		glm::mat4 pyramid1(1.0f);
 		pyramid1 = glm::translate(pyramid1, glm::vec3(0.0f, 1.3f, 0.0f));
-		float pyramidScale = 1.0f + 0.3f * glm::sin(time);
+		float pyramidScale = 1.0f + 0.8f * glm::sin(time);
 		pyramid1 = glm::scale(pyramid1,glm::vec3(pyramidScale, pyramidScale, pyramidScale));
 		
 		glm::mat4 pyramid2(1.0f);
 		pyramid2 = glm::translate(pyramid2, glm::vec3(0.0f, -1.3f, 0.0f));
 		
 		
-		
-
 		drawMesh(resources.cube, modelLocation, cube1);
 		drawMesh(resources.cube, modelLocation, cube2);
 		drawMesh(resources.sphere, modelLocation, Sphere1);
@@ -211,6 +195,7 @@ int main()
 		drawMesh(resources.pyramid, modelLocation, pyramid1);
 		drawMesh(resources.pyramid, modelLocation, pyramid2);
 		
+
 		
 		GLenum error;
 		while ((error = glGetError()) != GL_NO_ERROR)

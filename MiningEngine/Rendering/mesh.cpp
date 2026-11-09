@@ -106,10 +106,10 @@ bool Mesh::createCube()
     
     unsigned int indices[] = {
         0, 1, 2, 
-        0, 2, 3,
-        0, 3, 4,
-        3, 7, 4,
-        0, 4, 1,
+        0, 2, 3, 
+        0, 3, 4, 
+        3, 7, 4, 
+        0, 4, 1, 
         1, 4, 5,
         1, 5, 2,
         2, 5, 6,
@@ -156,8 +156,8 @@ bool Mesh::createSphere()
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
 
-    const int rings = 12;
-    const int slices = 12;
+    const int rings = 55;
+    const int slices = 50;
 
     float yStep = 2.0f / (rings - 1);
     float yPos = 1.0f;
