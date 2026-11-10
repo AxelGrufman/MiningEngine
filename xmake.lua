@@ -18,12 +18,12 @@ add_requires("glm")
 
 -- Engine
 target("MiningEngine")
-set_kind("binary")
+    set_kind("binary")
 
-add_files("MiningEngine/main.cpp")
-add_files("MiningEngine/Rendering/Shader.cpp")
-add_files("MiningEngine/Rendering/mesh.cpp")
-add_files("MiningEngine/Rendering/Camera.cpp")
+    add_files("src/**.cpp")
+    add_headerfiles("src/**.h", {install = false})
+    add_headerfiles("src/**.hpp", {install = false})
+    add_extrafiles("assets/**")
 
 add_packages("glfw", "glad", "glm")
 add_links("opengl32")
