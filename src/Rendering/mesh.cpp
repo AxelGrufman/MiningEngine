@@ -35,7 +35,7 @@ bool Mesh::setupMesh(const std::vector<Vertex>& vertices, const std::vector<unsi
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
     glEnableVertexAttribArray(1);
     
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
     glEnableVertexAttribArray(2);
     
     glBindVertexArray(0);    
@@ -344,4 +344,4 @@ bool Mesh::createTriangle()
     return true;
 }
 
-/*
+*/

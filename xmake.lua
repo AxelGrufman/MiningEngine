@@ -27,5 +27,6 @@ target("MiningEngine")
 
 add_packages("glfw", "glad", "glm")
 add_links("opengl32")
+add_includedirs("src")
 
 set_rundir("$(projectdir)")
