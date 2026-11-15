@@ -4,18 +4,43 @@
 #include <string>
 #include <filesystem>
 
+
 #include "Rendering/shader.h"
 #include "Rendering/Camera.h"
 #include "Rendering/Renderer.h"
 #include "Scene/scene.h"
-#include "Assets/OBJLoader.h"
 #include "Rendering/mesh.h"
 #include "Rendering/Renderable.h"
+#include "Assets/MeshManager.h"
+#include "Rendering/Texture.h"
+
+bool renderObj(const std::string& name, const glm::vec3& pos, const glm::vec3& scale, const glm::vec3& rot, Scene& scene, MeshManager& meshManager, Texture* texture = nullptr)
+{
+	Mesh* mesh = meshManager.loadMesh(name);
+
+	if (mesh == nullptr)
+	{
+		return false;
+	}
+	
+
+	Renderable object{};
+	object.mesh = mesh;
+	object.transform.position = pos;
+	object.transform.scale = scale;
+	object.transform.rotation = glm::radians(rot);
+	object.texture = texture;
+
+	scene.addRenderable(object);
+
+	return true;
+}
 
 void cleanup(GLFWwindow* window, Shader& shader)
 {
 	shader.destroy();
 
+	
 	
 	if (window != nullptr)
 		glfwDestroyWindow(window);
@@ -67,34 +92,29 @@ int main()
 	Camera camera;
 	Scene scene;
 	Renderer renderer;
+	MeshManager meshManager;
+	Texture texture;
 	
-		if (!shader.load( "assets/shaders/basic3d.vert", "assets/shaders/basic.frag"))
+	if (!shader.load( "assets/shaders/basic3d.vert", "assets/shaders/basic.frag"))
 	{
 		cleanup(window, shader);
 		return -1;
 	}
 	
-	MeshData modelData;
-	Mesh quadsphereMesh;
-
-	if (OBJLoader::load("assets/models/triangelateTestobject.obj", modelData))
+	if (texture.load("assets/Texture/texturetest.png"))
 	{
-		quadsphereMesh.setupMesh(modelData.vertices, modelData.indices);
-		
-		Renderable quadsphere{};
-		quadsphere.mesh = &quadsphereMesh;
-		
-		quadsphere.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
-		quadsphere.transform.scale = glm::vec3(0.1f);
-		
-		scene.addRenderable(quadsphere);
-
-		std::cout << "Quadsphere added to scene!\n";
+		std::cout << "Texture loaded successfully!\n";
 	}
 	else
 	{
-		std::cerr << "Could not load Quadsphere!\n";
+		std::cerr << "Texture loading failed!\n";
 	}
+	
+	renderObj("assets/models/smaltestOBJFile.obj",glm::vec3(-6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/monky.obj",	      glm::vec3(-3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/testOBJFile.obj",    glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/Turret.obj",         glm::vec3( 3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/Knight.obj",		  glm::vec3( 6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,meshManager, &texture);
 	
 	while (!glfwWindowShouldClose(window))
 	{		
@@ -123,7 +143,8 @@ int main()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	
+	meshManager.destroy();
+	texture.destroy();
 	cleanup(window, shader);
 	return 0;
 }

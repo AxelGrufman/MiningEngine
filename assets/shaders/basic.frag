@@ -3,9 +3,32 @@
 in vec3 vertexColor;
 out vec4 FragColor;
 
+in vec3 vNormal;
+in vec2 vUV;
+
 uniform vec3 uColor;
+uniform vec3 uLightDirection;
+uniform sampler2D uTexture;
+uniform bool uUseTexture;
 
 void main()
 {
-    FragColor = vec4(uColor, 1.0);
+    vec3 normal = normalize(vNormal);
+    vec3 lightDirection = normalize(uLightDirection);
+    float ambient = 0.2;
+    
+    float diffuse = max(dot(normal, lightDirection), 0.0);
+    float brightness = ambient + diffuse * 0.8;
+    
+    vec4 texColor = texture(uTexture, vUV);
+    
+    vec3 baseColor = uColor;
+    if (uUseTexture)
+    {
+        baseColor = texture(uTexture, vUV).rgb;
+    }
+   
+    vec3 finalColor = baseColor * brightness;
+
+    FragColor = vec4(finalColor, 1.0);
 }

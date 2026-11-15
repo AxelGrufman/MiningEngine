@@ -10,8 +10,9 @@ void Renderer::renderScene(const Scene& scene, const Camera& camera, Shader& sha
 {
     shader.use();
     
-    
+    glUniform1i(shader.getUniformLocation("uTexture"),0);
     glUniform3f(shader.getUniformLocation("uColor"),0.4f, 0.8f, 1.0f);
+    glUniform3f(shader.getUniformLocation("uLightDirection"),0.0f, 0.0f, 3.0f);
 
     glm::mat4 view = camera.getViewMatrix();
     glm::mat4 projection = camera.getProjectionMatrix();
@@ -28,7 +29,15 @@ void Renderer::renderScene(const Scene& scene, const Camera& camera, Shader& sha
         glm::mat4 model = renderable.transform.getModelMatrix();
         
         glUniformMatrix4fv(shader.getUniformLocation("uModel"),1, GL_FALSE, glm::value_ptr(model));
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+       
+        bool hasTexture = renderable.texture != nullptr;
+        glUniform1i(shader.getUniformLocation("uUseTexture"), hasTexture ? 1 : 0);
+        if (hasTexture)
+        {
+            renderable.texture->bind();
+        }
+        
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         renderable.mesh->drawIndexed();
     }
 }

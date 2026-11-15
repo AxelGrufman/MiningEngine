@@ -15,6 +15,8 @@ add_requires("glad 2.0.8", {
     }})
 
 add_requires("glm")
+add_requires("tinyobjloader v2.0.0rc13")
+add_requires("stb")
 
 -- Engine
 target("MiningEngine")
@@ -25,7 +27,7 @@ target("MiningEngine")
     add_headerfiles("src/**.hpp", {install = false})
     add_extrafiles("assets/**")
 
-add_packages("glfw", "glad", "glm")
+add_packages("glfw", "glad", "glm", "tinyobjloader", "stb")
 add_links("opengl32")
 add_includedirs("src")
 

@@ -1,0 +1,44 @@
+# Blender 5.3.0 MTL File: 'None'
+# www.blender.org
+
+newmtl M_NS_BuildingMarkings
+Ns 90.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd C:/Users/axel/Downloads/NIGHTSHIFT_FactoryMachinery_V2/Textures/T_NS_BuildingMarkings.png
+
+newmtl M_NS_Indicator
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd C:/Users/axel/Downloads/NIGHTSHIFT_FactoryMachinery_V2/Textures/T_NS_Industrial_BaseColor.png
+map_Ke C:/Users/axel/Downloads/NIGHTSHIFT_FactoryMachinery_V2/Textures/T_NS_Indicator_Emissive.png
+map_Bump -bm 0.350000 C:/Users/axel/Downloads/NIGHTSHIFT_FactoryMachinery_V2/Textures/T_NS_Industrial_Normal.png
+
+newmtl M_NS_IndustrialAtlas
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd C:/Users/axel/Downloads/NIGHTSHIFT_FactoryMachinery_V2/Textures/T_NS_Industrial_BaseColor.png
+map_Bump -bm 0.350000 C:/Users/axel/Downloads/NIGHTSHIFT_FactoryMachinery_V2/Textures/T_NS_Industrial_Normal.png
+
+newmtl M_NS_Screen
+Ns 532.900024
+Ka 0.080000 0.080000 0.080000
+Kd 0.018000 0.035000 0.027000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000960 0.002800 0.001840
+Ni 1.500000
+d 1.000000
+illum 3
