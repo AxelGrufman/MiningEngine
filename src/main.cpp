@@ -110,9 +110,9 @@ int main()
 		std::cerr << "Texture loading failed!\n";
 	}
 	
-	renderObj("assets/models/smaltestOBJFile.obj",glm::vec3(-6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/cube.obj",			  glm::vec3(-6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
 	renderObj("assets/models/monky.obj",	      glm::vec3(-3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
-	renderObj("assets/models/testOBJFile.obj",    glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/triangelateTestobject.obj",    glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
 	renderObj("assets/models/Turret.obj",         glm::vec3( 3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,meshManager, &texture);
 	renderObj("assets/models/Knight.obj",		  glm::vec3( 6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,meshManager, &texture);
 	
