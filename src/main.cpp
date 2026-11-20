@@ -4,7 +4,7 @@
 #include <string>
 #include <filesystem>
 
-
+#include "Core/Engine.h"
 #include "Rendering/shader.h"
 #include "Rendering/Camera.h"
 #include "Rendering/Renderer.h"
@@ -13,6 +13,7 @@
 #include "Rendering/Renderable.h"
 #include "Assets/MeshManager.h"
 #include "Rendering/Texture.h"
+#include "Core/EngineContext.h"
 
 bool renderObj(const std::string& name, const glm::vec3& pos, const glm::vec3& scale, const glm::vec3& rot, Scene& scene, MeshManager& meshManager, Texture* texture = nullptr)
 {
@@ -88,16 +89,33 @@ int main()
 	if (!window)
 		return -1;
 	
-	Shader shader;
+	Engine engine;
+	EngineContext& context = engine.getContext();
+	context.window = window;
+	context.input.initialize(window);
+	
+	InputMappingContext editorContext;
+	editorContext.name = "Editor";
+	editorContext.enabled = true;
+	editorContext.mouseBindings.push_back({GLFW_MOUSE_BUTTON_RIGHT, "EditorCameraLook"});
+	editorContext.mouseMotionBindings.push_back({"Look"});
+	context.inputMappings.addContext(editorContext);
+	
+	InputMappingContext player1Context;
+	player1Context.name = "Player1";
+	player1Context.enabled = false;
+	player1Context.keyBindings.push_back({GLFW_KEY_W, "MoveForward"});
+	player1Context.mouseMotionBindings.push_back({"Look"});
+	context.inputMappings.addContext(player1Context);
+	
 	Camera camera;
 	Scene scene;
-	Renderer renderer;
-	MeshManager meshManager;
 	Texture texture;
 	
-	if (!shader.load( "assets/shaders/basic3d.vert", "assets/shaders/basic.frag"))
+	
+	if (!context.shader.load( "assets/shaders/basic3d.vert", "assets/shaders/basic.frag"))
 	{
-		cleanup(window, shader);
+		cleanup(window, context.shader);
 		return -1;
 	}
 	
@@ -110,13 +128,13 @@ int main()
 		std::cerr << "Texture loading failed!\n";
 	}
 	
-	renderObj("assets/models/cube.obj",			  glm::vec3(-6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
-	renderObj("assets/models/monky.obj",	      glm::vec3(-3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
-	renderObj("assets/models/triangelateTestobject.obj",    glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), scene,meshManager, &texture);
-	renderObj("assets/models/Turret.obj",         glm::vec3( 3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,meshManager, &texture);
-	renderObj("assets/models/Knight.obj",		  glm::vec3( 6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/cube.obj",			  glm::vec3(-6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,context.meshManager, &texture);
+	renderObj("assets/models/monky.obj",	      glm::vec3(-3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), scene,context.meshManager, &texture);
+	renderObj("assets/models/triangelateTestobject.obj",    glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), scene,context.meshManager, &texture);
+	renderObj("assets/models/Turret.obj",         glm::vec3( 3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,context.meshManager, &texture);
+	renderObj("assets/models/Knight.obj",		  glm::vec3( 6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,context.meshManager, &texture);
 	
-	while (!glfwWindowShouldClose(window))
+	while (engine.isRunning())
 	{		
 		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 		{
@@ -131,7 +149,7 @@ int main()
 		glClearColor(0.4f, 0.3f, 0.2f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		renderer.renderScene(scene, camera, shader);
+		context.renderer.renderScene(scene, camera, context.shader);
 
 		
 		GLenum error;
@@ -142,9 +160,45 @@ int main()
 			
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		for (const KeyEvent& event : context.input.getKeyEvents())
+		{
+			if (event.key == GLFW_KEY_F5 && event.action == GLFW_PRESS)
+			{
+				if (engine.getMode() == EngineMode::Editor)
+				{
+					engine.enterPlayMode();
+					context.inputMappings.setContextEnabled("Editor", false);
+					context.inputMappings.setContextEnabled("Player1", true);
+				}
+				else
+				{
+					engine.stopPlayMode();
+					context.inputMappings.setContextEnabled("Editor", true);
+					context.inputMappings.setContextEnabled("Player1", false);
+				}
+			}
+		}
+		
+		if (context.inputMappings.isActionDown("EditorCameraLook", context.input))
+		{
+			std::cout << "Editor camera look active\n";
+		}
+		if (context.inputMappings.isActionDown("MoveForward", context.input))
+		{
+			std::cout << "Player1 moving forward\n";
+		}
+		
+		glm::vec2 look = context.inputMappings.getAxis2D("Look",context.input);
+
+		if (look.x != 0.0f || look.y != 0.0f)
+		{
+			std::cout << "Mouse movement: "<< look.x << ", "<< look.y << '\n';
+		}
+
+		context.input.clearEvents();
 	}
-	meshManager.destroy();
+	context.meshManager.destroy();
 	texture.destroy();
-	cleanup(window, shader);
+	cleanup(window, context.shader);
 	return 0;
 }
