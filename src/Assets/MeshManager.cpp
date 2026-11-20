@@ -19,7 +19,7 @@ Mesh* MeshManager::loadMesh(const std::string& filepath)
 
     MeshData data;
     
-    constexpr bool useTinyOBJ = false;
+    bool useTinyOBJ = false;
     
     
     if (useTinyOBJ)

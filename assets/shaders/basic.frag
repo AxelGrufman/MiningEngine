@@ -1,6 +1,5 @@
 #version 330 core
 
-in vec3 vertexColor;
 out vec4 FragColor;
 
 in vec3 vNormal;
@@ -19,8 +18,6 @@ void main()
     
     float diffuse = max(dot(normal, lightDirection), 0.0);
     float brightness = ambient + diffuse * 0.8;
-    
-    vec4 texColor = texture(uTexture, vUV);
     
     vec3 baseColor = uColor;
     if (uUseTexture)

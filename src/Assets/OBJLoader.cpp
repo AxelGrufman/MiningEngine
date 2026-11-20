@@ -22,7 +22,7 @@ bool OBJLoader::load(const std::string& filepath, MeshData& output)
     std::map<std::tuple<std::size_t, std::size_t, std::size_t>, unsigned int> vertexLookup;
     
     std::size_t reusedVertices = 0;
-     std::size_t lineNumber = 0;
+    std::size_t lineNumber = 0;
     
     std::ifstream file(filepath);
 

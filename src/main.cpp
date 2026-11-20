@@ -133,6 +133,11 @@ int main()
 	renderObj("assets/models/triangelateTestobject.obj",    glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), scene,context.meshManager, &texture);
 	renderObj("assets/models/Turret.obj",         glm::vec3( 3.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,context.meshManager, &texture);
 	renderObj("assets/models/Knight.obj",		  glm::vec3( 6.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f, 0.0f), scene,context.meshManager, &texture);
+	renderObj("assets/models/Cube.obj",				 glm::vec3(-6.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f,  0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/Monky.obj",				 glm::vec3(-3.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f,  0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/triangelateTestobject.obj",glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f,  0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/Sphere.obj",				 glm::vec3( 3.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f,0.0f), scene,meshManager, &texture);
+	renderObj("assets/models/Torus.obj",				 glm::vec3( 6.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 00.0f, 0.0f), scene,meshManager, &texture);
 	
 	while (engine.isRunning())
 	{		
