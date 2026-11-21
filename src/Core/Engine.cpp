@@ -9,6 +9,7 @@ void Engine::enterPlayMode()
 
     currentMode = EngineMode::Play;
     glfwSetInputMode(context.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    context.input.resetMouseTracking();
     std::cout << "Entered Play mode\n";
 }
 
@@ -19,6 +20,7 @@ void Engine::stopPlayMode()
 
     currentMode = EngineMode::Editor;
     glfwSetInputMode(context.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    context.input.resetMouseTracking();
     std::cout << "Returned to Editor mode\n";
 }
 

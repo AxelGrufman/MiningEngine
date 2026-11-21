@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+struct Transform;
+
 class Camera
 {
 public:
@@ -11,15 +13,13 @@ public:
         Orthographic
     };
 
-    glm::mat4 getViewMatrix() const;
+    glm::mat4 getViewMatrix(const Transform& transform) const;
     glm::mat4 getProjectionMatrix() const;
 
     void setProjectionMode(ProjectionMode mode);
+    void setAspectRatio(float aspect);
 
 private:
-    glm::vec3 position = { 0.0f, 3.0f, 13.5f };
-    glm::vec3 target = { 0.0f, 0.0f, 0.0f };
-    glm::vec3 up = { 0.0f, 1.0f, 0.0f };
 
     ProjectionMode projectionMode = ProjectionMode::Perspective;
 

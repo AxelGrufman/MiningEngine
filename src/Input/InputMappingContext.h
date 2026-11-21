@@ -1,35 +1,51 @@
 #pragma once
 
+#include "InputAction.h"
+
 #include <string>
 #include <vector>
-#include <glm/vec2.hpp>
+#include <unordered_map>
 
-class InputSystem;
-
-struct KeyBinding
+enum class InputSource
 {
-    int key;
-    std::string actionName;
+    Key,
+    MouseButton,
+    MouseMotion,
+    ScrollY
 };
 
-struct MouseButtonBinding
+struct InputBinding
 {
-    int button;
-    std::string actionName;
-};
+    std::string action;
+    InputActionType type;
+    InputSource source;
 
-struct MouseMotionBinding
-{
-    std::string actionName;
+    int code = 0;
+    glm::vec2 scale{1.0f, 0.0f};
 };
 
 struct InputMappingContext
 {
     std::string name;
-    std::vector<KeyBinding> keyBindings; 
-    std::vector<MouseButtonBinding> mouseBindings;
-    std::vector<MouseMotionBinding> mouseMotionBindings;
-    bool isActionDown(const std::string& actionName, const InputSystem& input) const;
-    glm::vec2 getAxis2D(const std::string& actionName, const InputSystem& input) const;
+
     bool enabled = false;
+    int priority = 0;
+    bool consumeInput = true;
+
+    std::vector<InputBinding> bindings;
+
+    void bindKey(const std::string& action, int key);
+    void bindMouseButton(const std::string& action, int button);
+    void bindAxis1DKey(const std::string& action, int key, float scale);
+    void bindAxis2DKey(const std::string& action, int key, glm::vec2 direction);
+    void bindMouseMotion(const std::string& action, glm::vec2 sensitivity = {1.0f, 1.0f});
+    void bindScrollY(const std::string& action, float scale = 1.0f);
+    
+    struct LastState
+    {
+        InputActionType type;
+        bool active;
+    };
+
+    std::unordered_map<std::string, LastState> activeLastFrame;
 };

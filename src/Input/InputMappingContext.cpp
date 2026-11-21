@@ -1,44 +1,31 @@
 #include "InputMappingContext.h"
 
-#include "InputSystem.h"
-
-bool InputMappingContext::isActionDown(const std::string& actionName, const InputSystem& input) const
+void InputMappingContext::bindKey(const std::string& action, int key)
 {
-    if (!enabled)
-    {
-        return false;
-    }
-    
-    for (const KeyBinding& binding : keyBindings)
-    {
-        if (binding.actionName == actionName && input.isKeyDown(binding.key))
-        {
-            return true;
-        }
-    }
-    for (const MouseButtonBinding& binding : mouseBindings)
-    {
-        if (binding.actionName == actionName && input.isMouseButtonDown(binding.button))
-        {
-            return true;
-        }
-    }
-
-    return false;
+    bindings.push_back({action, InputActionType::Button, InputSource::Key, key});
 }
 
-glm::vec2 InputMappingContext::getAxis2D(const std::string& actionName, const InputSystem& input) const
+void InputMappingContext::bindMouseButton(const std::string& action, int button)
 {
-    if (!enabled)
-        return {0.0f, 0.0f};
+    bindings.push_back({action, InputActionType::Button, InputSource::MouseButton, button});
+}
 
-    for (const MouseMotionBinding& binding : mouseMotionBindings)
-    {
-        if (binding.actionName == actionName)
-        {
-            return {static_cast<float>(input.getMouseDeltaX()), static_cast<float>(input.getMouseDeltaY())};
-        }
-    }
+void InputMappingContext::bindAxis1DKey(const std::string& action, int key, float scale)
+{
+    bindings.push_back({action, InputActionType::Axis1D, InputSource::Key, key, {scale, 0.0f}});
+}
 
-    return {0.0f, 0.0f};
+void InputMappingContext::bindAxis2DKey(const std::string& action, int key, glm::vec2 direction)
+{
+    bindings.push_back({action, InputActionType::Axis2D, InputSource::Key, key, direction});
+}
+
+void InputMappingContext::bindMouseMotion(const std::string& action, glm::vec2 sensitivity)
+{
+    bindings.push_back({action, InputActionType::Axis2D,  InputSource::MouseMotion, 0, sensitivity});
+}
+
+void InputMappingContext::bindScrollY(const std::string& action, float scale)
+{
+    bindings.push_back({action, InputActionType::Axis1D, InputSource::ScrollY, 0, {scale, 0.0f}});
 }

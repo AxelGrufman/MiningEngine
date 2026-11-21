@@ -6,7 +6,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-void Renderer::renderScene(const Scene& scene, const Camera& camera, Shader& shader) const
+void Renderer::renderScene(const Scene& scene, const Camera& camera, const Transform& cameraTransform, Shader& shader) const
 {
     shader.use();
     
@@ -14,7 +14,7 @@ void Renderer::renderScene(const Scene& scene, const Camera& camera, Shader& sha
     glUniform3f(shader.getUniformLocation("uColor"),0.4f, 0.8f, 1.0f);
     glUniform3f(shader.getUniformLocation("uLightDirection"),0.0f, 0.0f, 3.0f);
 
-    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 view = camera.getViewMatrix(cameraTransform);
     glm::mat4 projection = camera.getProjectionMatrix();
 
     glUniformMatrix4fv(shader.getUniformLocation("uView"),1, GL_FALSE, glm::value_ptr(view));
