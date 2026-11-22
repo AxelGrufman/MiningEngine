@@ -7,6 +7,7 @@
 #include "Assets/MeshManager.h"
 #include "Input/InputSystem.h"
 #include "Input/InputMappingManager.h"
+#include "Assets/TextureManager.h"
 
 struct EngineContext
 {
@@ -15,6 +16,7 @@ struct EngineContext
     Renderer renderer;
     Shader shader;
     MeshManager meshManager;
+    TextureManager textureManager;
     InputSystem input;
     InputMappingManager inputMappings;
 };

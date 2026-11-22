@@ -1,0 +1,43 @@
+
+# MiningEngine Scene 1
+
+[scene]
+name = Training Ground
+
+[settings]
+# Reserved for future scene-specific settings.
+
+[player1]
+position = 0, 1, 5
+rotation = 0, 0, 0
+
+[player2]
+position = 2, 1, 5
+rotation = 0, 0, 0
+
+[goal]
+position = 10, 1, -10
+
+[object]
+name = Cube
+mesh = assets/models/Cube.obj
+texture = assets/Texture/texturetest.png
+position = 2, 1, 0
+rotation = 0, 45, 0
+scale = 1, 1, 1
+
+[object]
+name = Sphere
+mesh = assets/models/Sphere.obj
+texture = none
+position = -2, 1, 0
+rotation = 0, 45, 0
+scale = 1, 1, 1
+
+[object]
+name = Sphere
+mesh = assets/models/Sphere.obj
+texture = none
+position = -2, 5, 0
+rotation = 0, 45, 0
+scale = 0.5, 0.5, 0.5

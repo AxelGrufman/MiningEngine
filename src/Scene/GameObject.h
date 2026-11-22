@@ -12,4 +12,5 @@ public:
 
     Transform transform;
     std::optional<Renderable> renderable;
+    bool persistentAcrossScenes = false;
 };

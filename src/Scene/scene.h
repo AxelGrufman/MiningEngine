@@ -20,6 +20,8 @@ public:
 
         return reference;
     }
+    
+    void clearLevelObjects();
 
 private:
     std::vector<std::unique_ptr<GameObject>> gameObjects;

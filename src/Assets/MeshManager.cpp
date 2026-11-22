@@ -24,7 +24,7 @@ Mesh* MeshManager::loadMesh(const std::string& filepath)
     
     if (useTinyOBJ)
     {
-        std::cout << "using tiny obj loader" << std::endl;
+        //std::cout << "using tiny obj loader" << std::endl;
         if (!TinyOBJLoader::load(filepath, data))
         {
             return nullptr;
@@ -32,16 +32,16 @@ Mesh* MeshManager::loadMesh(const std::string& filepath)
     }
     else
     {
-        std::cout << "using own obj loader" << std::endl;
+       // std::cout << "using own obj loader" << std::endl;
         if (!OBJLoader::load(filepath, data))
         {
             return nullptr;
         }
     }
     
-    std::cout << "Loaded OBJ: " << filepath << '\n';
-    std::cout << "Vertices: " << data.vertices.size() << '\n';
-    std::cout << "Indices: " << data.indices.size() << '\n';
+  //  std::cout << "Loaded OBJ: " << filepath << '\n';
+  //  std::cout << "Vertices: " << data.vertices.size() << '\n';
+   // std::cout << "Indices: " << data.indices.size() << '\n';
     
     if (data.vertices.empty() || data.indices.empty())
     {

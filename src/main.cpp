@@ -16,35 +16,12 @@
 #include "Core/EngineContext.h"
 #include "Logic/Controllers/FlyingCameraController.h"
 #include "Scene/CameraObject.h"
-
-bool renderObj(const std::string& name, const glm::vec3& pos, const glm::vec3& scale, const glm::vec3& rot, Scene& scene, MeshManager& meshManager, Texture* texture = nullptr)
-{
-	Mesh* mesh = meshManager.loadMesh(name);
-
-	if (mesh == nullptr)
-	{
-		return false;
-	}
-	
-	GameObject& object = scene.createGameObject<GameObject>();
-
-	object.transform.position = pos;
-	object.transform.rotation = glm::radians(rot);
-	object.transform.scale = scale;
-
-	object.renderable.emplace();
-	object.renderable->mesh = mesh;
-	object.renderable->texture = texture;
-
-	return true;
-}
+#include "Scene/SceneLoader.h"
+#include "Scene/SceneBuilder.h"
 
 void cleanup(GLFWwindow* window, Shader& shader)
 {
 	shader.destroy();
-
-	
-	
 	if (window != nullptr)
 		glfwDestroyWindow(window);
 
@@ -94,7 +71,6 @@ int main()
 	Engine engine;
 	EngineContext& context = engine.getContext();
 	Scene scene;
-	Texture texture;
 	context.window = window;
 	context.input.initialize(window);
 
@@ -108,6 +84,9 @@ int main()
 	editor.bindMouseMotion("Look");
 	editor.bindKey("Perspective", GLFW_KEY_P);
 	editor.bindKey("Orthographic", GLFW_KEY_O);
+	editor.bindKey("LoadScene1", GLFW_KEY_1);
+	editor.bindKey("LoadScene2", GLFW_KEY_2);
+	editor.bindKey("LoadScene3", GLFW_KEY_3);
 	
 	context.inputMappings.addContext(editor);
 	
@@ -157,6 +136,7 @@ int main()
 	FlyingCameraController player2CameraController;
 	bool editorLooking = false;
 	bool splitScreenEnabled = false;
+	int requestedScene = 0; 
 	
 	Camera editorCamera;
 	Transform editorCameraTransform;
@@ -164,9 +144,11 @@ int main()
 	
 	CameraObject& player1Object = scene.createGameObject<CameraObject>();
 	player1Object.transform.position = {0.0f, 1.0f, 5.0f};
+	player1Object.persistentAcrossScenes = true;
 	
 	CameraObject& player2Object = scene.createGameObject<CameraObject>();
 	player2Object.transform.position = {2.0f, 1.0f, 5.0f};
+	player2Object.persistentAcrossScenes = true;
 
 	//-----------Temp inputs subscribs -----
 	
@@ -206,6 +188,20 @@ int main()
 		}
 	});
 	
+	context.inputMappings.subscribe("Editor", "LoadScene1", InputPhase::Started, [&](const InputActionEvent&)
+	{
+		requestedScene = 1;
+	});
+
+	context.inputMappings.subscribe("Editor", "LoadScene2", InputPhase::Started, [&](const InputActionEvent&)
+	{
+		requestedScene = 2;
+	});
+
+	context.inputMappings.subscribe("Editor", "LoadScene3", InputPhase::Started, [&](const InputActionEvent&)
+	{
+		requestedScene = 3;
+	});
 	
 	//Player 1
 	context.inputMappings.subscribe( "Player1", "Look", InputPhase::Performed, [&](const InputActionEvent& event)
@@ -247,21 +243,24 @@ int main()
 		return -1;
 	}
 	
-	if (texture.load("assets/Texture/texturetest.png"))
+	auto sceneData = SceneLoader::load("assets/Scenes/scene1.mscene");
+
+	if (sceneData)
 	{
-		std::cout << "Texture loaded successfully!\n";
+		SceneBuilder::addWorldObjects(scene, *sceneData, context.meshManager, context.textureManager);
+
+		player1Object.transform.position = sceneData->player1Start;
+		player1Object.transform.rotation = glm::radians(sceneData->player1Rotation);
+
+		player2Object.transform.position = sceneData->player2Start;
+		player2Object.transform.rotation = glm::radians(sceneData->player2Rotation);
+
+		std::cout << "Loaded scene: " << sceneData->name << '\n';
 	}
 	else
 	{
-		std::cerr << "Texture loading failed!\n";
+		std::cerr << "Failed to load scene!\n";
 	}
-	
-	renderObj("assets/models/Cube.obj",				 glm::vec3(-6.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f,  0.0f), scene,context.meshManager, &texture);
-	renderObj("assets/models/Monky.obj",				 glm::vec3(-3.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.0f,  0.0f), scene,context.meshManager, &texture);
-	renderObj("assets/models/triangelateTestobject.obj",glm::vec3( 0.0f, -2.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f,  0.0f), scene,context.meshManager, &texture);
-	renderObj("assets/models/Sphere.obj",				 glm::vec3( 3.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f,0.0f), scene,context.meshManager, &texture);
-	renderObj("assets/models/Torus.obj",				 glm::vec3( 6.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 00.0f, 0.0f), scene,context.meshManager, &texture);
-		
 	
 	Mesh* markerMesh = context.meshManager.loadMesh("assets/models/Editormodels/MatineeCam_SM.obj");
 	if (markerMesh)
@@ -318,6 +317,31 @@ int main()
 		context.inputMappings.process(context.input);
 		context.input.clearEvents();
 		
+		if (requestedScene != 0)
+		{
+			const std::string scenePaths[] = {"assets/Scenes/scene1.mscene", "assets/Scenes/scene2.mscene", "assets/Scenes/scene3.mscene"};
+			auto data = SceneLoader::load(scenePaths[requestedScene - 1]);
+
+			if (data && !data->name.empty())
+			{
+				scene.clearLevelObjects();
+				SceneBuilder::addWorldObjects(scene, *data, context.meshManager, context.textureManager);
+
+				player1Object.transform.position = data->player1Start;
+				player1Object.transform.rotation = glm::radians(data->player1Rotation);
+
+				player2Object.transform.position = data->player2Start;
+				player2Object.transform.rotation = glm::radians(data->player2Rotation);
+
+				std::cout << "Switched to scene: " << data->name << '\n';
+			}
+			else
+			{
+				std::cerr << "Failed to switch scene!\n";
+			}
+			requestedScene = 0;
+		}
+		
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 
@@ -334,7 +358,7 @@ int main()
 
 			// Player 1 - Top
 			glViewport(0, bottomHeight, width, topHeight);
-			player1Object.camera.setAspectRatio(static_cast<float>(width) / bottomHeight);
+			player1Object.camera.setAspectRatio(static_cast<float>(width) / topHeight);
 			context.renderer.renderScene(scene, player1Object.camera, player1Object.transform, context.shader, {&player1Object});
 			
 			// Player 2 - Bottom
@@ -357,8 +381,8 @@ int main()
 
 		glfwSwapBuffers(window);
 	}
+	context.textureManager.destroy();
 	context.meshManager.destroy();
-	texture.destroy();
 	cleanup(window, context.shader);
 	return 0;
 }

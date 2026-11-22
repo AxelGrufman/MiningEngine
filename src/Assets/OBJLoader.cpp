@@ -242,7 +242,7 @@ bool OBJLoader::load(const std::string& filepath, MeshData& output)
             }
         }
     }
-    std::cout << "Reused vertices: " << reusedVertices << '\n';
+   // std::cout << "Reused vertices: " << reusedVertices << '\n';
     output = std::move(data);
     return true;
 }
