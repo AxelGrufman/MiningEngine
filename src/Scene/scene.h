@@ -8,10 +8,8 @@
 class Scene
 {
 public:
-    void addRenderable(const Renderable& renderable);
     GameObject& addGameObject(std::unique_ptr<GameObject> object);
-
-    const std::vector<Renderable>& getRenderables() const;
+    const std::vector<std::unique_ptr<GameObject>>& getGameObjects() const;
     
     template<typename T> T& createGameObject()
     {
@@ -24,6 +22,5 @@ public:
     }
 
 private:
-    std::vector<Renderable> renderables;
     std::vector<std::unique_ptr<GameObject>> gameObjects;
 };

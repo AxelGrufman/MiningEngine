@@ -2,11 +2,6 @@
 
 #include <utility>
 
-
-void Scene::addRenderable(const Renderable& renderable)
-{
-    renderables.push_back(renderable);
-}
 GameObject& Scene::addGameObject(std::unique_ptr<GameObject> object)
 {
     GameObject& reference = *object;
@@ -14,8 +9,7 @@ GameObject& Scene::addGameObject(std::unique_ptr<GameObject> object)
     return reference;
 }
 
-
-const std::vector<Renderable>& Scene::getRenderables() const
+const std::vector<std::unique_ptr<GameObject>>& Scene::getGameObjects() const
 {
-    return renderables;
+    return gameObjects;
 }

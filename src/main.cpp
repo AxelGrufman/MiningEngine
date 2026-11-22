@@ -15,6 +15,7 @@
 #include "Rendering/Texture.h"
 #include "Core/EngineContext.h"
 #include "Logic/Controllers/FlyingCameraController.h"
+#include "Scene/CameraObject.h"
 
 bool renderObj(const std::string& name, const glm::vec3& pos, const glm::vec3& scale, const glm::vec3& rot, Scene& scene, MeshManager& meshManager, Texture* texture = nullptr)
 {
@@ -25,15 +26,15 @@ bool renderObj(const std::string& name, const glm::vec3& pos, const glm::vec3& s
 		return false;
 	}
 	
+	GameObject& object = scene.createGameObject<GameObject>();
 
-	Renderable object{};
-	object.mesh = mesh;
 	object.transform.position = pos;
-	object.transform.scale = scale;
 	object.transform.rotation = glm::radians(rot);
-	object.texture = texture;
+	object.transform.scale = scale;
 
-	scene.addRenderable(object);
+	object.renderable.emplace();
+	object.renderable->mesh = mesh;
+	object.renderable->texture = texture;
 
 	return true;
 }
@@ -161,13 +162,11 @@ int main()
 	Transform editorCameraTransform;
 	editorCameraTransform.position = {0.0f, 3.0f, 13.5f};
 	
-	Camera player1Camera;
-	Transform playerCameraTransform;
-	playerCameraTransform.position = {0.0f, 1.0f, 5.0f};
+	CameraObject& player1Object = scene.createGameObject<CameraObject>();
+	player1Object.transform.position = {0.0f, 1.0f, 5.0f};
 	
-	Camera player2Camera;
-	Transform player2CameraTransform;
-	player2CameraTransform.position = {2.0f, 1.0f, 5.0f};
+	CameraObject& player2Object = scene.createGameObject<CameraObject>();
+	player2Object.transform.position = {2.0f, 1.0f, 5.0f};
 
 	//-----------Temp inputs subscribs -----
 	
@@ -211,34 +210,34 @@ int main()
 	//Player 1
 	context.inputMappings.subscribe( "Player1", "Look", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		playerCameraController.applyLook(playerCameraTransform, event.value);
+		playerCameraController.applyLook(player1Object.transform, event.value);
 	});
 	
 	context.inputMappings.subscribe("Player1", "Move", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		playerCameraController.applyMovement(playerCameraTransform, event.value, deltaTime);
+		playerCameraController.applyMovement(player1Object.transform, event.value, deltaTime);
 	});
 	
 	context.inputMappings.subscribe("Player1", "Vertical", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		playerCameraController.applyVerticalMovement(playerCameraTransform, event.value.x, deltaTime);
+		playerCameraController.applyVerticalMovement(player1Object.transform, event.value.x, deltaTime);
 	});
 	
 	
 	//Player 2
 	context.inputMappings.subscribe("Player2", "Move", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		player2CameraController.applyMovement(player2CameraTransform, event.value, deltaTime);
+		player2CameraController.applyMovement(player2Object.transform, event.value, deltaTime);
 	});
     
 	context.inputMappings.subscribe("Player2", "KeyboardLook", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		player2CameraController.applyKeyboardLook(player2CameraTransform, event.value, deltaTime);
+		player2CameraController.applyKeyboardLook(player2Object.transform, event.value, deltaTime);
 	});
 	
 	context.inputMappings.subscribe("Player2", "Vertical", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		player2CameraController.applyVerticalMovement(player2CameraTransform, event.value.x, deltaTime);
+		player2CameraController.applyVerticalMovement(player2Object.transform, event.value.x, deltaTime);
 	});
 	//---------------------------------------
 	
@@ -263,6 +262,21 @@ int main()
 	renderObj("assets/models/Sphere.obj",				 glm::vec3( 3.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -90.0f,0.0f), scene,context.meshManager, &texture);
 	renderObj("assets/models/Torus.obj",				 glm::vec3( 6.0f,  0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 00.0f, 0.0f), scene,context.meshManager, &texture);
 		
+	
+	Mesh* markerMesh = context.meshManager.loadMesh("assets/models/Editormodels/MatineeCam_SM.obj");
+	if (markerMesh)
+	{
+		player1Object.renderable.emplace();
+		player1Object.renderable->mesh = markerMesh;
+		player1Object.renderable->localScale = {0.02f, 0.02f, 0.02f};
+		player1Object.renderable->localRotation = {0.0f, glm::radians(90.0f), 0.0f};
+		
+		player2Object.renderable.emplace();
+		player2Object.renderable->mesh = markerMesh;
+		player2Object.renderable->localScale = {0.02f, 0.02f, 0.02f};
+		player2Object.renderable->localRotation = {0.0f, glm::radians(90.0f), 0.0f};
+	}
+	
 	double lastFrameTime = glfwGetTime();
 	
 	while (engine.isRunning())
@@ -320,25 +334,25 @@ int main()
 
 			// Player 1 - Top
 			glViewport(0, bottomHeight, width, topHeight);
-			player1Camera.setAspectRatio(static_cast<float>(width) / topHeight);
-			context.renderer.renderScene(scene, player1Camera, playerCameraTransform, context.shader);
-
+			player1Object.camera.setAspectRatio(static_cast<float>(width) / bottomHeight);
+			context.renderer.renderScene(scene, player1Object.camera, player1Object.transform, context.shader, {&player1Object});
+			
 			// Player 2 - Bottom
 			glViewport(0, 0, width, bottomHeight);
-			player2Camera.setAspectRatio(static_cast<float>(width) / bottomHeight);
-			context.renderer.renderScene(scene, player2Camera, player2CameraTransform, context.shader);
+			player2Object.camera.setAspectRatio(static_cast<float>(width) / bottomHeight);
+			context.renderer.renderScene(scene, player2Object.camera, player2Object.transform, context.shader, {&player2Object});
 		}
 		else
 		{
 			glViewport(0, 0, width, height);
-
 			bool isEditor = engine.getMode() == EngineMode::Editor;
 
-			Camera& activeCamera = isEditor ? editorCamera : player1Camera;
-			const Transform& activeTransform = isEditor ? editorCameraTransform : playerCameraTransform;
+			Camera& activeCamera = isEditor ? editorCamera : player1Object.camera;
+			const Transform& activeTransform = isEditor ? editorCameraTransform : player1Object.transform;
+			const GameObject* excludedObject = isEditor ? nullptr : &player1Object;
 
 			activeCamera.setAspectRatio(static_cast<float>(width) / height);
-			context.renderer.renderScene(scene, activeCamera, activeTransform, context.shader);
+			context.renderer.renderScene(scene, activeCamera, activeTransform, context.shader, {&player1Object, &player2Object});
 		}
 
 		glfwSwapBuffers(window);
