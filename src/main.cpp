@@ -162,7 +162,7 @@ int main()
 	{
 		editorCamera.setProjectionMode(Camera::ProjectionMode::Orthographic);
 	});
-	
+	    
 	context.inputMappings.subscribe("Editor", "EditorCameraLook", InputPhase::Started, [&](const InputActionEvent&)
 	{
 		editorLooking = true;

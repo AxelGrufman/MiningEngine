@@ -90,8 +90,7 @@ void InputMappingManager::notify(const InputActionEvent& event)
     }
 }
 
-void InputMappingManager::process(
-    const InputSystem& input)
+void InputMappingManager::process(const InputSystem& input)
 {
     std::array<bool, GLFW_KEY_LAST + 1> usedKeys{};
     std::array<bool, GLFW_MOUSE_BUTTON_LAST + 1> usedButtons{};
@@ -248,8 +247,7 @@ void InputMappingManager::process(
                 }
             }
         }
-
-        // Send action events to registered listeners.
+        
         for (auto& [actionName, result] : results)
         {
             bool active = result.value.x != 0.0f || result.value.y != 0.0f;
