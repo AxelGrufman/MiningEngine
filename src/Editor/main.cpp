@@ -4,7 +4,7 @@
 #include <string>
 #include <filesystem>
 
-#include "Core/Engine.h"
+#include "Engine.h"
 #include "Rendering/shader.h"
 #include "Rendering/Camera.h"
 #include "Rendering/Renderer.h"
@@ -12,8 +12,7 @@
 #include "Rendering/mesh.h"
 #include "Rendering/Renderable.h"
 #include "Assets/MeshManager.h"
-#include "Rendering/Texture.h"
-#include "Core/EngineContext.h"
+#include "EngineContext.h"
 #include "Logic/Controllers/FlyingCameraController.h"
 #include "Scene/CameraObject.h"
 #include "Scene/SceneLoader.h"

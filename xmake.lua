@@ -18,17 +18,33 @@ add_requires("glm")
 add_requires("tinyobjloader v2.0.0rc13")
 add_requires("stb")
 
--- Engine
-target("MiningEngine")
-    set_kind("binary")
+---Engine---
 
-    add_files("src/**.cpp")
-    add_headerfiles("src/**.h", {install = false})
-    add_headerfiles("src/**.hpp", {install = false})
-    add_extrafiles("assets/**")
+-- Engine Core
+target("MiningEngine.Core")
+set_kind("static")
 
-add_packages("glfw", "glad", "glm", "tinyobjloader", "stb")
-add_links("opengl32")
-add_includedirs("src")
+add_files("src/Core/**.cpp")
+add_headerfiles("src/Core/**.h", {install = false})
+add_headerfiles("src/Core/**.hpp", {install = false})
 
+add_packages("glfw", "glad", "glm", "tinyobjloader", "stb", {public = true})
+add_links("opengl32", {public = true})
+add_includedirs("src/Core", {public = true})
+
+target_end()
+
+-- Editor
+target("MiningEngine.Editor")
+set_kind("binary")
+
+add_files("src/Editor/**.cpp")
+add_headerfiles("src/Editor/**.h", {install = false})
+add_headerfiles("src/Editor/**.hpp", {install = false})
+
+add_deps("MiningEngine.Core")
+
+add_extrafiles("assets/**")
 set_rundir("$(projectdir)")
+
+target_end()

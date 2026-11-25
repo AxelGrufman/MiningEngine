@@ -5,7 +5,6 @@
 name = Training Ground
 
 [settings]
-# Reserved for future scene-specific settings.
 
 [player1]
 position = 0, 1, 5
