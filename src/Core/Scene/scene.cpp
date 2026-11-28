@@ -1,23 +1,29 @@
 #include "Scene.h"
 
-#include <utility>
-
-GameObject& Scene::addGameObject(std::unique_ptr<GameObject> object)
-{
-    GameObject& reference = *object;
-    gameObjects.push_back(std::move(object));
-    return reference;
-}
-
-const std::vector<std::unique_ptr<GameObject>>& Scene::getGameObjects() const
-{
-    return gameObjects;
-}
+#include "ECS/Components/NameComponent.h"
+#include "ECS/Components/TransformComponent.h"
+#include "ECS/Components/LevelObjectTag.h"
 
 void Scene::clearLevelObjects()
 {
-    std::erase_if(gameObjects, [](const auto& object)
-    {
-        return !object->persistentAcrossScenes;
-    });
+    world.delete_with<LevelObjectTag>();
+}
+
+flecs::world& Scene::getWorld()
+{
+    return world;
+}
+const flecs::world& Scene::getWorld() const
+{
+    return world;
+}
+
+flecs::entity Scene::createEntity(const std::string& name)
+{
+    flecs::entity entity = world.entity();
+
+    entity.set<NameComponent>({name});
+    entity.set<TransformComponent>({});
+
+    return entity;
 }

@@ -1,12 +1,12 @@
-#include "Camera.h"
+#include "CameraComponent.h"
 
-#include "Transform.h"
+#include "TransformComponent.h"
 
 #include  <glm/gtc/matrix_transform.hpp>
 
 
 
-glm::mat4 Camera::getViewMatrix(const Transform& transform) const
+glm::mat4 CameraComponent::getViewMatrix(const TransformComponent& transform) const
 {
     glm::mat4 cameraWorld(1.0f);
 
@@ -19,12 +19,12 @@ glm::mat4 Camera::getViewMatrix(const Transform& transform) const
     return glm::inverse(cameraWorld);
 }
 
-void Camera::setProjectionMode(ProjectionMode mode)
+void CameraComponent::setProjectionMode(ProjectionMode mode)
 {
     projectionMode = mode;
 }
 
-void Camera::setAspectRatio(float aspect)
+void CameraComponent::setAspectRatio(float aspect)
 {
     if (aspect > 0.0f)
     {
@@ -32,7 +32,7 @@ void Camera::setAspectRatio(float aspect)
     }
 }
 
-glm::mat4 Camera::getProjectionMatrix() const
+glm::mat4 CameraComponent::getProjectionMatrix() const
 {
     if (projectionMode == ProjectionMode::Perspective)
     {

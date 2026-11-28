@@ -1,34 +1,67 @@
-
 # MiningEngine Scene 2
 
 [scene]
 name = Monkey Valley
 
-[settings]
+[entity]
+name = Player1
 
-[player1]
+{TransformComponent}
 position = -4, 2, 8
 rotation = 0, -20, 0
+scale = 1, 1, 1
 
-[player2]
+{PlayerComponent}
+playerIndex = 1
+
+{CameraComponent}
+
+[entity]
+name = Player2
+
+{TransformComponent}
 position = -2, 2, 8
 rotation = 0, -20, 0
+scale = 1, 1, 1
 
-[goal]
+{PlayerComponent}
+playerIndex = 2
+
+{CameraComponent}
+
+[entity]
+name = Goal
+
+{TransformComponent}
 position = 8, 1, -8
+rotation = 0, 0, 0
+scale = 1, 1, 1
 
-[object]
+{GoalTag}
+
+
+[entity]
 name = Monkey
-mesh = assets/models/Monky.obj
-texture = none
+
+{TransformComponent}
 position = 0, 1, 0
 rotation = 0, 45, 0
 scale = 2, 2, 2
 
-[object]
+{MeshComponent}
+path = assets/models/Monky.obj
+
+
+[entity]
 name = Cube
-mesh = assets/models/Cube.obj
-texture = assets/Texture/texturetest.png
+
+{TransformComponent}
 position = 5, 0, -3
 rotation = 0, 30, 0
 scale = 2, 2, 2
+
+{MeshComponent}
+path = assets/models/Cube.obj
+
+{TextureComponent}
+path = assets/Texture/texturetest.png

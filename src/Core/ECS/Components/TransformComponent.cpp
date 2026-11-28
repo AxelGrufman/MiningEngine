@@ -1,7 +1,7 @@
-#include "Transform.h"
+#include "TransformComponent.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-glm::mat4 Transform::getModelMatrix() const
+glm::mat4 TransformComponent::getModelMatrix() const
 {
     glm::mat4 model(1.0f);
 

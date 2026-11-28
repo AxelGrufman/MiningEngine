@@ -8,5 +8,5 @@ class TextureManager;
 class SceneBuilder
 {
 public:
-    static void addWorldObjects(Scene& scene, const SceneData& data, MeshManager& meshManager, TextureManager& textureManager);
+    static void buildEntities(Scene& scene, const SceneData& data, MeshManager& meshManager, TextureManager& textureManager);
 };

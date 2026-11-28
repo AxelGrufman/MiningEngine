@@ -1,42 +1,79 @@
-
 # MiningEngine Scene 1
 
 [scene]
 name = Training Ground
 
-[settings]
+[entity]
+name = Player1
 
-[player1]
+{TransformComponent}
 position = 0, 1, 5
 rotation = 0, 0, 0
+scale = 1, 1, 1
 
-[player2]
+{PlayerComponent}
+playerIndex = 1
+
+{CameraComponent}
+
+[entity]
+name = Player2
+
+{TransformComponent}
 position = 2, 1, 5
 rotation = 0, 0, 0
+scale = 1, 1, 1
 
-[goal]
+{PlayerComponent}
+playerIndex = 2
+
+{CameraComponent}
+
+[entity]
+name = Goal
+
+{TransformComponent}
 position = 10, 1, -10
+rotation = 0, 0, 0
+scale = 1, 1, 1
 
-[object]
+{GoalTag}
+
+
+[entity]
 name = Cube
-mesh = assets/models/Cube.obj
-texture = assets/Texture/texturetest.png
+
+{TransformComponent}
 position = 2, 1, 0
 rotation = 0, 45, 0
 scale = 1, 1, 1
 
-[object]
+{MeshComponent}
+path = assets/models/Cube.obj
+
+{TextureComponent}
+path = assets/Texture/texturetest.png
+
+
+[entity]
 name = Sphere
-mesh = assets/models/Sphere.obj
-texture = none
+
+{TransformComponent}
 position = -2, 1, 0
 rotation = 0, 45, 0
 scale = 1, 1, 1
 
-[object]
+{MeshComponent}
+path = assets/models/Sphere.obj
+
+
+[entity]
 name = Sphere
-mesh = assets/models/Sphere.obj
-texture = none
+
+{TransformComponent}
 position = -2, 5, 0
 rotation = 0, 45, 0
 scale = 0.5, 0.5, 0.5
+
+{MeshComponent}
+path = assets/models/Sphere.obj

@@ -1,34 +1,67 @@
-
 # MiningEngine Scene 3
 
 [scene]
 name = The Final Chamber
 
-[settings]
+[entity]
+name = Player1
 
-[player1]
+{TransformComponent}
 position = 0, 3, 12
 rotation = -10, 0, 0
+scale = 1, 1, 1
 
-[player2]
+{PlayerComponent}
+playerIndex = 1
+
+{CameraComponent}
+
+[entity]
+name = Player2
+
+{TransformComponent}
 position = 3, 3, 12
 rotation = -10, 0, 0
+scale = 1, 1, 1
 
-[goal]
+{PlayerComponent}
+playerIndex = 2
+
+{CameraComponent}
+
+[entity]
+name = Goal
+
+{TransformComponent}
 position = 0, 1, -15
+rotation = 0, 0, 0
+scale = 1, 1, 1
 
-[object]
+{GoalTag}
+
+
+[entity]
 name = Sphere
-mesh = assets/models/Sphere.obj
-texture = none
+
+{TransformComponent}
 position = -4, 1, 0
 rotation = 0, 0, 0
 scale = 3, 3, 3
 
-[object]
+{MeshComponent}
+path = assets/models/Sphere.obj
+
+
+[entity]
 name = Torus
-mesh = assets/models/Torus.obj
-texture = assets/Texture/texturetest.png
+
+{TransformComponent}
 position = 4, 1, -4
 rotation = 45, 0, 0
 scale = 2, 2, 2
+
+{MeshComponent}
+path = assets/models/Torus.obj
+
+{TextureComponent}
+path = assets/Texture/texturetest.png

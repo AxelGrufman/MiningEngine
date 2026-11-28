@@ -2,30 +2,22 @@
 
 #include <string>
 #include <vector>
-#include <glm/glm.hpp>
+#include <unordered_map>
 
-struct SceneObjectData
+struct SceneComponentData
 {
-    std::string name;
-    std::string meshPath;
-    std::string texturePath = "none";
+    std::string type;
+    std::unordered_map<std::string, std::string> properties;
+};
 
-    glm::vec3 position{0.0f};
-    glm::vec3 rotation{0.0f};
-    glm::vec3 scale{1.0f};
+struct SceneEntityData
+{
+    std::string name = "Unnamed Entity";
+    std::vector<SceneComponentData> components;
 };
 
 struct SceneData
 {
     std::string name;
-
-    glm::vec3 player1Start{0.0f};
-    glm::vec3 player1Rotation{0.0f};
-
-    glm::vec3 player2Start{0.0f};
-    glm::vec3 player2Rotation{0.0f};
-
-    glm::vec3 goalPosition{0.0f};
-
-    std::vector<SceneObjectData> objects;
+    std::vector<SceneEntityData> entities;
 };

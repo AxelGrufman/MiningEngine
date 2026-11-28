@@ -2,21 +2,24 @@
 #include <glad/gl.h>  
 #include <GLFW/glfw3.h>
 #include <string>
-#include <filesystem>
+#include <flecs.h>
 
 #include "Engine.h"
 #include "Rendering/shader.h"
-#include "Rendering/Camera.h"
+#include "ECS/Components/CameraComponent.h"
+#include "ECS/Components/TransformComponent.h"
+#include "ECS/Components/MeshComponent.h"
+#include "ECS/Components/PlayerComponent.h"
 #include "Rendering/Renderer.h"
 #include "Scene/scene.h"
-#include "Rendering/mesh.h"
-#include "Rendering/Renderable.h"
 #include "Assets/MeshManager.h"
 #include "EngineContext.h"
 #include "Logic/Controllers/FlyingCameraController.h"
-#include "Scene/CameraObject.h"
 #include "Scene/SceneLoader.h"
 #include "Scene/SceneBuilder.h"
+
+#include "Game.h"
+
 
 void cleanup(GLFWwindow* window, Shader& shader)
 {
@@ -89,44 +92,7 @@ int main()
 	
 	context.inputMappings.addContext(editor);
 	
-	// PLAYER 1
-	InputMappingContext player1;
-	player1.name = "Player1";
-	player1.enabled = false;
-	player1.priority = 0;
-	
-	player1.bindAxis2DKey("Move", GLFW_KEY_W, {0, 1});
-	player1.bindAxis2DKey("Move", GLFW_KEY_S, {0, -1});
-	player1.bindAxis2DKey("Move", GLFW_KEY_A, {-1, 0});
-	player1.bindAxis2DKey("Move", GLFW_KEY_D, {1, 0});
-	
-	player1.bindMouseMotion("Look");
-	
-	player1.bindAxis1DKey("Vertical", GLFW_KEY_SPACE, 1.0f);
-	player1.bindAxis1DKey("Vertical", GLFW_KEY_LEFT_CONTROL, -1.0f);
-	
-	context.inputMappings.addContext(player1);
-	
-	//Player 2
-	InputMappingContext player2;
-	player2.name = "Player2";
-	player2.enabled = false;
-	player2.priority = 0;
-
-	player2.bindAxis2DKey("Move", GLFW_KEY_UP, {0, 1});
-	player2.bindAxis2DKey("Move", GLFW_KEY_DOWN, {0, -1});
-	player2.bindAxis2DKey("Move", GLFW_KEY_LEFT, {-1, 0});
-	player2.bindAxis2DKey("Move", GLFW_KEY_RIGHT, {1, 0});
-	
-	player2.bindAxis2DKey("KeyboardLook", GLFW_KEY_KP_8, {0, -1});
-	player2.bindAxis2DKey("KeyboardLook", GLFW_KEY_KP_2, {0, 1});
-	player2.bindAxis2DKey("KeyboardLook", GLFW_KEY_KP_4, {-1, 0});
-	player2.bindAxis2DKey("KeyboardLook", GLFW_KEY_KP_6, {1, 0});
-
-	player2.bindAxis1DKey("Vertical", GLFW_KEY_RIGHT_SHIFT, 1.0f);
-	player2.bindAxis1DKey("Vertical", GLFW_KEY_RIGHT_CONTROL, -1.0f);
-
-	context.inputMappings.addContext(player2);
+	MiningGame::initialize(context.inputMappings);
 	
 	float deltaTime = 0.0f;
 	
@@ -135,31 +101,58 @@ int main()
 	FlyingCameraController player2CameraController;
 	bool editorLooking = false;
 	bool splitScreenEnabled = false;
-	int requestedScene = 0; 
+	int requestedScene = 0;
 	
-	Camera editorCamera;
-	Transform editorCameraTransform;
-	editorCameraTransform.position = {0.0f, 3.0f, 13.5f};
+	flecs::entity editorCameraEntity = scene.createEntity("EditorCamera");
+	editorCameraEntity.set<CameraComponent>({});
+	editorCameraEntity.get_mut<TransformComponent>().position = {0.0f, 3.0f, 13.5f};
 	
-	CameraObject& player1Object = scene.createGameObject<CameraObject>();
-	player1Object.transform.position = {0.0f, 1.0f, 5.0f};
-	player1Object.persistentAcrossScenes = true;
-	
-	CameraObject& player2Object = scene.createGameObject<CameraObject>();
-	player2Object.transform.position = {2.0f, 1.0f, 5.0f};
-	player2Object.persistentAcrossScenes = true;
+	flecs::entity player1Entity;
+	flecs::entity player2Entity;
 
+	auto findPlayers = [&]()
+	{
+		player1Entity = flecs::entity{};
+		player2Entity = flecs::entity{};
+
+		scene.getWorld().each([&](flecs::entity entity, const PlayerComponent& player)
+		{
+			if (player.playerIndex == 1)
+			{
+				player1Entity = entity;
+			}
+			else if (player.playerIndex == 2)
+			{
+				player2Entity = entity;
+			}
+		});
+	};
+	
+	auto isValidPlayer = [](flecs::entity entity) -> bool
+	{
+		return entity.is_alive() && entity.has<PlayerComponent>() && entity.has<TransformComponent>() && entity.has<CameraComponent>();
+	};
+	
+	auto stopPlayMode = [&]()
+	{
+		engine.stopPlayMode();
+		context.inputMappings.setContextEnabled("Editor", true);
+		context.inputMappings.setContextEnabled("Player1", false);
+		context.inputMappings.setContextEnabled("Player2", false);
+		splitScreenEnabled = false;
+	};
+	
 	//-----------Temp inputs subscribs -----
 	
 	//editor	
 	context.inputMappings.subscribe("Editor", "Perspective", InputPhase::Started, [&](const InputActionEvent&)
 	{
-		editorCamera.setProjectionMode(Camera::ProjectionMode::Perspective);
+		editorCameraEntity.get_mut<CameraComponent>().setProjectionMode(CameraComponent::ProjectionMode::Perspective);
 	});
 
 	context.inputMappings.subscribe("Editor","Orthographic", InputPhase::Started, [&](const InputActionEvent&)
 	{
-		editorCamera.setProjectionMode(Camera::ProjectionMode::Orthographic);
+		editorCameraEntity.get_mut<CameraComponent>().setProjectionMode(CameraComponent::ProjectionMode::Orthographic);
 	});
 	    
 	context.inputMappings.subscribe("Editor", "EditorCameraLook", InputPhase::Started, [&](const InputActionEvent&)
@@ -183,7 +176,9 @@ int main()
 	{
 		if (editorLooking)
 		{
-			editorCameraController.applyLook(editorCameraTransform, event.value);
+			auto& transform = editorCameraEntity.get_mut<TransformComponent>();
+
+			editorCameraController.applyLook(transform, event.value);
 		}
 	});
 	
@@ -205,34 +200,58 @@ int main()
 	//Player 1
 	context.inputMappings.subscribe( "Player1", "Look", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		playerCameraController.applyLook(player1Object.transform, event.value);
+		if (!isValidPlayer(player1Entity))
+			return;
+		
+		auto& transform = player1Entity.get_mut<TransformComponent>();
+		playerCameraController.applyLook(transform, event.value);
 	});
 	
 	context.inputMappings.subscribe("Player1", "Move", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		playerCameraController.applyMovement(player1Object.transform, event.value, deltaTime);
+		if (!isValidPlayer(player1Entity))
+			return;
+		
+		auto& transform = player1Entity.get_mut<TransformComponent>();
+		playerCameraController.applyMovement(transform, event.value, deltaTime);
 	});
 	
 	context.inputMappings.subscribe("Player1", "Vertical", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		playerCameraController.applyVerticalMovement(player1Object.transform, event.value.x, deltaTime);
+		if (!isValidPlayer(player1Entity))
+			return;
+		
+		auto& transform = player1Entity.get_mut<TransformComponent>();
+		playerCameraController.applyVerticalMovement(transform, event.value.x, deltaTime);
 	});
 	
 	
 	//Player 2
 	context.inputMappings.subscribe("Player2", "Move", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		player2CameraController.applyMovement(player2Object.transform, event.value, deltaTime);
+		if (!isValidPlayer(player2Entity))
+			return;
+		
+		auto& transform = player2Entity.get_mut<TransformComponent>();
+		player2CameraController.applyMovement(transform, event.value, deltaTime);
 	});
     
 	context.inputMappings.subscribe("Player2", "KeyboardLook", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		player2CameraController.applyKeyboardLook(player2Object.transform, event.value, deltaTime);
+		if (!isValidPlayer(player2Entity))
+			return;
+		
+		auto& transform = player2Entity.get_mut<TransformComponent>();
+		player2CameraController.applyKeyboardLook(transform, event.value, deltaTime);
 	});
 	
 	context.inputMappings.subscribe("Player2", "Vertical", InputPhase::Performed, [&](const InputActionEvent& event)
 	{
-		player2CameraController.applyVerticalMovement(player2Object.transform, event.value.x, deltaTime);
+		if (!isValidPlayer(player2Entity))
+			return;
+		
+		auto& transform = player2Entity.get_mut<TransformComponent>();
+		player2CameraController.applyVerticalMovement(transform, event.value.x, deltaTime);
 	});
 	//---------------------------------------
 	
@@ -246,14 +265,8 @@ int main()
 
 	if (sceneData)
 	{
-		SceneBuilder::addWorldObjects(scene, *sceneData, context.meshManager, context.textureManager);
-
-		player1Object.transform.position = sceneData->player1Start;
-		player1Object.transform.rotation = glm::radians(sceneData->player1Rotation);
-
-		player2Object.transform.position = sceneData->player2Start;
-		player2Object.transform.rotation = glm::radians(sceneData->player2Rotation);
-
+		SceneBuilder::buildEntities(scene, *sceneData, context.meshManager, context.textureManager);
+		findPlayers();
 		std::cout << "Loaded scene: " << sceneData->name << '\n';
 	}
 	else
@@ -261,19 +274,7 @@ int main()
 		std::cerr << "Failed to load scene!\n";
 	}
 	
-	Mesh* markerMesh = context.meshManager.loadMesh("assets/models/Editormodels/MatineeCam_SM.obj");
-	if (markerMesh)
-	{
-		player1Object.renderable.emplace();
-		player1Object.renderable->mesh = markerMesh;
-		player1Object.renderable->localScale = {0.02f, 0.02f, 0.02f};
-		player1Object.renderable->localRotation = {0.0f, glm::radians(90.0f), 0.0f};
-		
-		player2Object.renderable.emplace();
-		player2Object.renderable->mesh = markerMesh;
-		player2Object.renderable->localScale = {0.02f, 0.02f, 0.02f};
-		player2Object.renderable->localRotation = {0.0f, glm::radians(90.0f), 0.0f};
-	}
+	Mesh* cameraMarkerMesh = context.meshManager.loadMesh("assets/models/Editormodels/MatineeCam_SM.obj");
 	
 	double lastFrameTime = glfwGetTime();
 	
@@ -291,21 +292,29 @@ int main()
 			{
 				if (engine.getMode() == EngineMode::Editor)
 				{
+					if (!isValidPlayer(player1Entity))
+					{
+						std::cerr << "Cannot enter play mode: No valid Player 1!\n";
+						continue;
+					}
+					
 					engine.enterPlayMode();
 					context.inputMappings.setContextEnabled("Editor", false);
 					context.inputMappings.setContextEnabled("Player1", true);
 				}
 				else
 				{
-					engine.stopPlayMode();
-					context.inputMappings.setContextEnabled("Editor", true);
-					context.inputMappings.setContextEnabled("Player1", false);
-					context.inputMappings.setContextEnabled("Player2", false);
-					splitScreenEnabled = false;
+					stopPlayMode();
 				}
 			}
 			if (event.key == GLFW_KEY_F6 && event.action == GLFW_PRESS && engine.getMode() == EngineMode::Play)
 			{
+				if (!splitScreenEnabled && !isValidPlayer(player2Entity))
+				{
+					std::cerr << "Cannot enable split-screen: No valid Player 2!\n";
+					continue;
+				}
+				
 				splitScreenEnabled = !splitScreenEnabled;
 				context.inputMappings.setContextEnabled("Player2", splitScreenEnabled);
 				std::cout << "Split-screen: " << (splitScreenEnabled ? "ON" : "OFF") << '\n';
@@ -324,14 +333,8 @@ int main()
 			if (data && !data->name.empty())
 			{
 				scene.clearLevelObjects();
-				SceneBuilder::addWorldObjects(scene, *data, context.meshManager, context.textureManager);
-
-				player1Object.transform.position = data->player1Start;
-				player1Object.transform.rotation = glm::radians(data->player1Rotation);
-
-				player2Object.transform.position = data->player2Start;
-				player2Object.transform.rotation = glm::radians(data->player2Rotation);
-
+				SceneBuilder::buildEntities(scene, *data, context.meshManager, context.textureManager);
+				findPlayers();
 				std::cout << "Switched to scene: " << data->name << '\n';
 			}
 			else
@@ -341,6 +344,19 @@ int main()
 			requestedScene = 0;
 		}
 		
+		if (engine.getMode() == EngineMode::Play && !isValidPlayer(player1Entity))
+		{
+			stopPlayMode();
+			std::cerr << "Play mode stopped: Player 1 is invalid!\n";
+		}
+		
+		if (splitScreenEnabled && !isValidPlayer(player2Entity))
+		{
+			splitScreenEnabled = false;
+			context.inputMappings.setContextEnabled("Player2", false);
+
+			std::cerr << "Split-screen disabled: Player 2 is invalid!\n";
+		}
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
 
@@ -357,25 +373,37 @@ int main()
 
 			// Player 1 - Top
 			glViewport(0, bottomHeight, width, topHeight);
-			player1Object.camera.setAspectRatio(static_cast<float>(width) / topHeight);
-			context.renderer.renderScene(scene, player1Object.camera, player1Object.transform, context.shader, {&player1Object});
+			auto& P1camera = player1Entity.get_mut<CameraComponent>();
+			const auto& P1transform = player1Entity.get<TransformComponent>();
+			P1camera.setAspectRatio(static_cast<float>(width) / topHeight);
+			context.renderer.renderScene(scene, P1camera, P1transform, context.shader, {player1Entity});
 			
 			// Player 2 - Bottom
 			glViewport(0, 0, width, bottomHeight);
-			player2Object.camera.setAspectRatio(static_cast<float>(width) / bottomHeight);
-			context.renderer.renderScene(scene, player2Object.camera, player2Object.transform, context.shader, {&player2Object});
+			auto& P2camera = player2Entity.get_mut<CameraComponent>();
+			const auto& P2transform = player2Entity.get<TransformComponent>();
+			P2camera.setAspectRatio(static_cast<float>(width) / bottomHeight);
+			context.renderer.renderScene(scene, P2camera, P2transform, context.shader, {player2Entity});
 		}
 		else
 		{
 			glViewport(0, 0, width, height);
 			bool isEditor = engine.getMode() == EngineMode::Editor;
 
-			Camera& activeCamera = isEditor ? editorCamera : player1Object.camera;
-			const Transform& activeTransform = isEditor ? editorCameraTransform : player1Object.transform;
-			const GameObject* excludedObject = isEditor ? nullptr : &player1Object;
+			flecs::entity activeEntity = isEditor ? editorCameraEntity : player1Entity;
+			auto& activeCamera = activeEntity.get_mut<CameraComponent>();
+			const auto& activeTransform = activeEntity.get<TransformComponent>();
 
 			activeCamera.setAspectRatio(static_cast<float>(width) / height);
-			context.renderer.renderScene(scene, activeCamera, activeTransform, context.shader, {&player1Object, &player2Object});
+			if (isEditor)
+			{
+				context.renderer.renderScene(scene, activeCamera, activeTransform, context.shader);
+				context.renderer.renderCameraMarkers(scene, activeCamera, activeTransform, context.shader, cameraMarkerMesh, editorCameraEntity);
+			}
+			else
+			{
+				context.renderer.renderScene(scene, activeCamera, activeTransform, context.shader, {player1Entity});
+			}
 		}
 
 		glfwSwapBuffers(window);

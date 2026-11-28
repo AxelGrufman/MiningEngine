@@ -1,14 +1,34 @@
 #include "Renderer.h"
 
 #include "Scene/scene.h"
-#include "Camera.h"
 #include "Shader.h"
+#include "ECS/Components/CameraComponent.h"
+#include "ECS/Components/MeshComponent.h"
+#include "ECS/Components/TextureComponent.h"
+#include "ECS/Components/TransformComponent.h"
+
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 
-void Renderer::renderScene(const Scene& scene, const Camera& camera, const Transform& cameraTransform, Shader& shader, std::initializer_list<const GameObject*> excludedObjects) const
+static void drawRenderable(Shader& shader, Mesh* mesh, Texture* texture, const glm::mat4& model)
+{
+    if (!mesh)
+        return;
+
+    glUniformMatrix4fv(shader.getUniformLocation("uModel"), 1, GL_FALSE, glm::value_ptr(model));
+
+    bool hasTexture = texture != nullptr;
+    glUniform1i(shader.getUniformLocation("uUseTexture"), hasTexture ? 1 : 0);
+
+    if (hasTexture)
+        texture->bind();
+
+    mesh->drawIndexed();
+}
+
+void Renderer::renderScene(const Scene& scene, const CameraComponent& camera, const TransformComponent& cameraTransform, Shader& shader, std::initializer_list<flecs::entity> excludedEntities) const
 {
     shader.use();
     
@@ -22,39 +42,53 @@ void Renderer::renderScene(const Scene& scene, const Camera& camera, const Trans
     glUniformMatrix4fv(shader.getUniformLocation("uView"),1, GL_FALSE, glm::value_ptr(view));
 
     glUniformMatrix4fv(shader.getUniformLocation("uProjection"),1, GL_FALSE, glm::value_ptr(projection));
-
-    auto drawRenderable = [&](const Renderable& renderable, const glm::mat4& model)
+    
+    scene.getWorld().each([&](flecs::entity entity, const TransformComponent& transform, const MeshComponent& mesh)
     {
-        if (!renderable.mesh)
+        if (std::find(excludedEntities.begin(), excludedEntities.end(), entity) != excludedEntities.end())
+            return;
+        
+        Texture* texture = nullptr;
+        
+        if (entity.has<TextureComponent>())
+        {
+            texture = entity.get<TextureComponent>().texture;
+        }
+
+        glm::mat4 model = transform.getModelMatrix();
+
+        model = glm::rotate(model, mesh.localRotation.z, glm::vec3(0, 0, 1));
+        model = glm::rotate(model, mesh.localRotation.y, glm::vec3(0, 1, 0));
+        model = glm::rotate(model, mesh.localRotation.x, glm::vec3(1, 0, 0));
+        model = glm::scale(model, mesh.localScale);
+
+        drawRenderable(shader, mesh.mesh, texture, model);
+    });
+}
+
+void Renderer::renderCameraMarkers(const Scene& scene, const CameraComponent& camera, const TransformComponent& cameraTransform, Shader& shader, Mesh* markerMesh, flecs::entity excludedEntity) const
+{
+    if (!markerMesh)
+        return;
+
+    shader.use();
+
+    glm::mat4 view = camera.getViewMatrix(cameraTransform);
+    glm::mat4 projection = camera.getProjectionMatrix();
+
+    glUniformMatrix4fv(shader.getUniformLocation("uView"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(shader.getUniformLocation("uProjection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    scene.getWorld().each([&](flecs::entity entity, const TransformComponent& transform, const CameraComponent&)
+    {
+        if (entity == excludedEntity)
             return;
 
-        glUniformMatrix4fv(shader.getUniformLocation("uModel"), 1, GL_FALSE, glm::value_ptr(model));
+        glm::mat4 model = transform.getModelMatrix();
 
-        bool hasTexture = renderable.texture != nullptr;
-        glUniform1i(shader.getUniformLocation("uUseTexture"), hasTexture ? 1 : 0);
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
+        model = glm::scale(model, glm::vec3(0.02f));
 
-        if (hasTexture)
-            renderable.texture->bind();
-
-        renderable.mesh->drawIndexed();
-    };
-    
-    for (const auto& object : scene.getGameObjects())
-    {
-        if (std::find(excludedObjects.begin(), excludedObjects.end(), object.get()) != excludedObjects.end())
-            continue;
-
-        if (!object->renderable)
-            continue;
-
-        glm::mat4 model = object->transform.getModelMatrix();
-
-        model = glm::rotate(model, object->renderable->localRotation.z, glm::vec3(0, 0, 1));
-        model = glm::rotate(model, object->renderable->localRotation.y, glm::vec3(0, 1, 0));
-        model = glm::rotate(model, object->renderable->localRotation.x, glm::vec3(1, 0, 0));
-
-        model = glm::scale(model, object->renderable->localScale);
-
-        drawRenderable(*object->renderable, model);
-    }
+        drawRenderable(shader, markerMesh, nullptr, model);
+    });
 }

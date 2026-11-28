@@ -2,9 +2,9 @@
 
 #include <glm/glm.hpp>
 
-struct Transform;
+struct TransformComponent;
 
-class Camera
+class CameraComponent
 {
 public:
     enum class ProjectionMode
@@ -13,7 +13,7 @@ public:
         Orthographic
     };
 
-    glm::mat4 getViewMatrix(const Transform& transform) const;
+    glm::mat4 getViewMatrix(const TransformComponent& transform) const;
     glm::mat4 getProjectionMatrix() const;
 
     void setProjectionMode(ProjectionMode mode);
